@@ -9,11 +9,20 @@ export function middleware(request: NextRequest) {
 
   // 1. Admin Protection (/admin/*)
   if (pathname.startsWith('/admin')) {
+    // Pintu masuk /admin/login dibebaskan dari redirect loop
+    if (pathname === '/admin/login') {
+      // Jika sudah login sebagai ADMIN, redirect langsung ke dashboard produk
+      if (roleCookie === 'ADMIN') {
+        return NextResponse.redirect(new URL('/admin/produk', request.url));
+      }
+      return NextResponse.next();
+    }
+
+    // Akses dashboard internal mewajibkan peran ADMIN
     if (roleCookie !== 'ADMIN') {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      loginUrl.searchParams.set('required_role', 'ADMIN');
-      return NextResponse.redirect(loginUrl);
+      const adminLoginUrl = new URL('/admin/login', request.url);
+      adminLoginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(adminLoginUrl);
     }
   }
 
@@ -21,7 +30,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/vendor')) {
     const isVendor = ['VENDOR_PETANI', 'VENDOR_PASAR_3P', 'VENDOR_PROTEIN', 'ADMIN'].includes(roleCookie);
     if (!isVendor) {
-      const loginUrl = new URL('/login', request.url);
+      const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       loginUrl.searchParams.set('required_role', 'VENDOR');
       return NextResponse.redirect(loginUrl);

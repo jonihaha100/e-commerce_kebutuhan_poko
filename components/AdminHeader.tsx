@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Package,
   ShoppingBag,
@@ -11,12 +11,22 @@ import {
   ShieldCheck,
   Clock,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { getJakartaTimeString } from '@/lib/time';
 
 export function AdminHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const currentTimeWIB = getJakartaTimeString(new Date(), false);
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      document.cookie = 'user_role=; path=/; max-age=0';
+      localStorage.removeItem('agri_user_role');
+    }
+    router.push('/admin/login');
+  };
 
   const tabs = [
     {
@@ -67,6 +77,14 @@ export function AdminHeader() {
             <span>Toko Warga (Live)</span>
             <ExternalLink className="w-3 h-3" />
           </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center gap-1 text-[11px] text-rose-300 hover:text-rose-200 transition font-bold px-2 py-0.5 rounded-md hover:bg-rose-950/40 border border-transparent hover:border-rose-800 cursor-pointer"
+          >
+            <LogOut className="w-3 h-3" />
+            <span>Keluar</span>
+          </button>
         </div>
       </div>
 
