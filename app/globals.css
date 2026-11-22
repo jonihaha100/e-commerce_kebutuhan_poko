@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Brand Color Palette Derived from Agrojaya Tree Logo & Astro Quick-Commerce */
+  --bg-color: #F8FAFC;         /* Clean Astro Quick-Commerce White/Slate */
+  --bg-surface: #FFFFFF;
+  --text-primary: #0F172A;     /* Deep Crisp Slate */
+  --text-secondary: #475569;   /* Slate Gray */
+  
+  /* Logo Core Colors */
+  --brand-green: #24B05A;      /* Fresh Sprout Leaf Green */
+  --brand-green-hover: #1B8A44;
+  --brand-blue: #4C9BD5;       /* Sky & Atmosphere Cerulean Blue */
+  --brand-blue-hover: #3A87BF;
+  --brand-brown: #613D1A;      /* Fertile Soil Earth Brown */
+  --brand-brown-light: #8D5B2A;
+
+  --border-color: #E2E8F0;
+  --card-bg: #FFFFFF;
+  
+  --font-outfit: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: var(--font-outfit);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-outfit);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+/* Brand Button Styles (Agrojaya Tree Logo Colors) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--brand-green);
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-green-hover);
+  box-shadow: 0 4px 12px rgba(36, 176, 90, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-blue:hover {
+  background-color: var(--brand-blue-hover);
+  box-shadow: 0 4px 12px rgba(76, 155, 213, 0.3);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #FFFFFF;
+  color: var(--text-primary);
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background-color: #F8FAFC;
+  border-color: var(--brand-green);
+  color: var(--brand-green);
+}
+
+/* Quick Commerce Card Utility */
+.astro-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.astro-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
