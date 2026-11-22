@@ -35,7 +35,7 @@ interface AppContextType {
 
   // Catalog Prices
   catalogPrices: DailyCatalogPrice[];
-  updateCatalogPrice: (productId: string, newSellPrice: number) => void;
+  updateCatalogPrice: (productId: string, newSellPrice: number, newModalPrice?: number) => void;
 
   // Orders Management
   orders: Order[];
@@ -114,6 +114,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           console.error('Failed to parse saved orders', e);
         }
       }
+      const savedPrices = localStorage.getItem('agri_catalog_prices');
+      if (savedPrices) {
+        try {
+          const parsedPrices = JSON.parse(savedPrices);
+          if (Array.isArray(parsedPrices) && parsedPrices.length > 0) {
+            setCatalogPrices(parsedPrices);
+          }
+        } catch (e) {
+          console.error('Failed to parse saved prices', e);
+        }
+      }
     }
   }, [clusters]);
 
@@ -168,10 +179,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateCatalogPrice = (productId: string, newSellPrice: number) => {
-    setCatalogPrices((prev) =>
-      prev.map((cp) => (cp.product_id === productId ? { ...cp, sell_price_idr: newSellPrice } : cp))
-    );
+  const updateCatalogPrice = (productId: string, newSellPrice: number, newModalPrice?: number) => {
+    setCatalogPrices((prev) => {
+      const updated = prev.map((cp) => {
+        if (cp.product_id === productId) {
+          const farmerSplit = newModalPrice !== undefined ? newModalPrice : cp.farmer_split_idr;
+          return {
+            ...cp,
+            sell_price_idr: newSellPrice,
+            farmer_split_idr: farmerSplit,
+            ops_split_idr: newSellPrice - farmerSplit,
+          };
+        }
+        return cp;
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('agri_catalog_prices', JSON.stringify(updated));
+      }
+      return updated;
+    });
   };
 
   // Order Management

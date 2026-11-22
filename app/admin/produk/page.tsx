@@ -23,15 +23,17 @@ import {
   ArrowUpRight,
   Eye,
   CheckCircle2,
+  Save,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminProdukPage() {
-  const { products, addProduct, updateProduct, deleteProduct, catalogPrices } = useApp();
+  const { products, addProduct, updateProduct, deleteProduct, catalogPrices, updateCatalogPrice } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
   // Form State for Adding Product
@@ -42,8 +44,16 @@ export default function AdminProdukPage() {
   const [formUnit, setFormUnit] = useState('pack (250gr)');
   const [formModalPrice, setFormModalPrice] = useState<number>(3500);
   const [formSellPrice, setFormSellPrice] = useState<number>(5000);
-  const [formQuota, setFormQuota] = useState<number>(50);
-  const [formIcon, setFormIcon] = useState('🥬');
+
+  // Form State for Editing Product
+  const [editName, setEditName] = useState('');
+  const [editSku, setEditSku] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editCategory, setEditCategory] = useState<Product['category_type']>('VEGETABLE_1P');
+  const [editUnit, setEditUnit] = useState('pack (250gr)');
+  const [editModalPrice, setEditModalPrice] = useState<number>(3500);
+  const [editSellPrice, setEditSellPrice] = useState<number>(5000);
+  const [editIsActive, setEditIsActive] = useState<boolean>(true);
 
   // Filter products
   const filteredProducts = products.filter((p) => {
@@ -64,7 +74,7 @@ export default function AdminProdukPage() {
     { id: 'STAPLE_3P', label: '🌾 Sembako Pokok 3P' },
   ];
 
-  // Auto-generate SKU when name changes
+  // Auto-generate SKU when name changes in Add Form
   const handleNameChange = (val: string) => {
     setFormName(val);
     if (!formSku || formSku.startsWith('PROD-')) {
@@ -76,10 +86,13 @@ export default function AdminProdukPage() {
     }
   };
 
-  // Calculate live margin
+  // Calculate live margin for Add form
   const calculatedMarginPct =
     formSellPrice > 0 ? Math.round(((formSellPrice - formModalPrice) / formSellPrice) * 100) : 0;
-  const isMarginHealthy = calculatedMarginPct >= 15;
+
+  // Calculate live margin for Edit form
+  const calculatedEditMarginPct =
+    editSellPrice > 0 ? Math.round(((editSellPrice - editModalPrice) / editSellPrice) * 100) : 0;
 
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +130,48 @@ export default function AdminProdukPage() {
     setTimeout(() => setFeedbackMsg(null), 4000);
   };
 
+  const handleOpenEditModal = (prod: Product) => {
+    const priceEntry = catalogPrices.find((cp) => cp.product_id === prod.id);
+    const sellPrice = priceEntry?.sell_price_idr || 5000;
+    const modalPrice = priceEntry?.farmer_split_idr || Math.round(sellPrice * 0.72);
+
+    setEditingProduct(prod);
+    setEditName(prod.name);
+    setEditSku(prod.sku);
+    setEditDesc(prod.description || '');
+    setEditCategory(prod.category_type);
+    setEditUnit(prod.unit);
+    setEditModalPrice(modalPrice);
+    setEditSellPrice(sellPrice);
+    setEditIsActive(prod.is_active);
+  };
+
+  const handleSaveEditProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    const is1p =
+      editCategory === 'VEGETABLE_1P' ||
+      editCategory === 'TUBER_CURED_1P' ||
+      editCategory === 'PROTEIN_1P';
+
+    updateProduct(editingProduct.id, {
+      name: editName,
+      sku: editSku.toUpperCase(),
+      description: editDesc,
+      category_type: editCategory,
+      unit: editUnit,
+      is_1p: is1p,
+      is_active: editIsActive,
+    });
+
+    updateCatalogPrice(editingProduct.id, editSellPrice, editModalPrice);
+
+    setEditingProduct(null);
+    setFeedbackMsg(`Perubahan komoditas "${editName}" berhasil disimpan!`);
+    setTimeout(() => setFeedbackMsg(null), 3500);
+  };
+
   const handleToggleStatus = (prod: Product) => {
     updateProduct(prod.id, { is_active: !prod.is_active });
   };
@@ -144,7 +199,7 @@ export default function AdminProdukPage() {
             </div>
             <button
               onClick={() => setFeedbackMsg(null)}
-              className="p-1 hover:bg-emerald-100 rounded-lg text-emerald-700"
+              className="p-1 hover:bg-emerald-100 rounded-lg text-emerald-700 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -199,7 +254,7 @@ export default function AdminProdukPage() {
               <span className="text-2xl font-black text-emerald-700">
                 {products.filter((p) => p.is_1p).length}
               </span>
-              <span className="text-[10px] text-emerald-600 font-medium">Ciwidey & Lembang</span>
+              <span className="text-[10px] text-stone-500 font-medium">Ciwidey & Lembang</span>
             </div>
           </div>
 
@@ -208,22 +263,23 @@ export default function AdminProdukPage() {
               🏬 Pasokan 3P (Grosir)
             </span>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-black text-amber-800">
+              <span className="text-2xl font-black text-amber-700">
                 {products.filter((p) => !p.is_1p).length}
               </span>
-              <span className="text-[10px] text-amber-700 font-medium">Pasar Caringin</span>
+              <span className="text-[10px] text-stone-500 font-medium">Pasar Caringin</span>
             </div>
           </div>
 
           <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
-            <span className="text-[11px] font-bold text-sky-700 uppercase tracking-wider block">
-              🟢 Status Tayang
+            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Status Tayang</span>
             </span>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-black text-sky-800">
+              <span className="text-2xl font-black text-stone-900">
                 {products.filter((p) => p.is_active).length}
               </span>
-              <span className="text-[10px] text-sky-600 font-medium">Di Etalase Toko</span>
+              <span className="text-[10px] text-emerald-600 font-bold">Di Etalase Toko</span>
             </div>
           </div>
         </div>
@@ -393,9 +449,16 @@ export default function AdminProdukPage() {
                           </button>
                         </td>
 
-                        {/* Aksi */}
+                        {/* Aksi: Edit & Delete */}
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleOpenEditModal(p)}
+                              className="p-1.5 text-stone-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition cursor-pointer"
+                              title="Ubah komoditas / harga"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
                             <button
                               onClick={() => handleDelete(p)}
                               className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
@@ -418,24 +481,24 @@ export default function AdminProdukPage() {
       {/* MODAL FORM TAMBAH KOMODITAS BARU */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-stone-200 space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-stone-100 pb-3.5">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 space-y-6 max-h-[90vh] overflow-y-auto animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-stone-100 pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                  <Package className="w-4 h-4 text-emerald-700" />
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#24B05A] flex items-center justify-center font-bold">
+                  <Package className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-stone-900 leading-tight">
+                  <h3 className="text-base font-black text-stone-900 leading-tight">
                     Tambah Komoditas Baru
                   </h3>
-                  <span className="text-[11px] text-stone-500 font-medium">
+                  <span className="text-[11px] text-stone-500 font-normal">
                     Langsung tampil otomatis di etalase belanja warga
                   </span>
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={() => setIsAddModalOpen(false)}
                 className="p-1.5 text-stone-400 hover:text-stone-700 rounded-xl hover:bg-stone-100 transition cursor-pointer"
               >
@@ -443,108 +506,119 @@ export default function AdminProdukPage() {
               </button>
             </div>
 
-            {/* Form Content */}
-            <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
-              {/* Nama Komoditas */}
-              <div className="space-y-1">
-                <label className="font-bold text-stone-800 flex items-center justify-between">
-                  <span>Nama Komoditas / Hasil Panen *</span>
-                  <span className="text-[10px] text-stone-400 font-normal">Contoh: Bayam Organik Ciwidey</span>
-                </label>
+            <form onSubmit={handleSaveProduct} className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-bold text-stone-700">
+                    Nama Komoditas / Hasil Panen *
+                  </label>
+                  <span className="text-[10px] text-stone-400">Contoh: Bayam Organik Ciwidey</span>
+                </div>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. Bayam Hijau Super Petik Fajar"
                   value={formName}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:outline-none focus:border-[#24B05A]"
+                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] text-stone-900 font-medium"
+                  required
                 />
               </div>
 
-              {/* SKU & Satuan */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-stone-800">Kode SKU Otomatis *</label>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Kode SKU Otomatis *
+                  </label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. BYM-01"
                     value={formSku}
-                    onChange={(e) => setFormSku(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl font-mono text-stone-900 font-bold uppercase focus:outline-none focus:border-[#24B05A]"
+                    onChange={(e) => setFormSku(e.target.value.toUpperCase())}
+                    placeholder="E.G. BYM-01"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] font-mono uppercase text-stone-900"
+                    required
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-stone-800">Satuan Porsi Dapur *</label>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Satuan Porsi Dapur *
+                  </label>
                   <select
                     value={formUnit}
                     onChange={(e) => setFormUnit(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:outline-none focus:border-[#24B05A]"
+                    className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] text-stone-900 font-medium"
                   >
                     <option value="pack (250gr)">pack (250gr)</option>
-                    <option value="pack (500gr)">pack (500gr)</option>
+                    <option value="pack (200gr)">pack (200gr)</option>
                     <option value="ikat (250gr)">ikat (250gr)</option>
-                    <option value="ikat (500gr)">ikat (500gr)</option>
-                    <option value="1 kg">1 kg</option>
-                    <option value="1 kg (16 butir)">1 kg (16 butir telur)</option>
+                    <option value="ikat (300gr)">ikat (300gr)</option>
+                    <option value="500gr">500gr</option>
+                    <option value="kg">kg</option>
+                    <option value="kg (16 butir)">kg (16 butir)</option>
                     <option value="pouch 2L">pouch 2L</option>
+                    <option value="karung 5kg">karung 5kg</option>
                   </select>
                 </div>
               </div>
 
-              {/* Kategori Rantai Pasok */}
-              <div className="space-y-1">
-                <label className="font-bold text-stone-800">Kategori Rantai Pasok *</label>
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Kategori Rantai Pasok *
+                </label>
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:outline-none focus:border-[#24B05A]"
+                  className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] text-stone-900 font-medium"
                 >
                   <option value="VEGETABLE_1P">🥬 Sayuran Daun 1P (Petani Ciwidey/Lembang)</option>
-                  <option value="TUBER_CURED_1P">🍠 Umbi Cilembu 1P (Peram 14 Hari Sumedang)</option>
-                  <option value="PROTEIN_1P">🍗 Daging Ayam Filet & Telur 1P (Kandang Lembang)</option>
-                  <option value="SPICE_3P">🌶️ Bumbu Dapur 3P (Cabai/Bawang Caringin)</option>
-                  <option value="STAPLE_3P">🌾 Sembako Pokok 3P (Beras & Minyak)</option>
+                  <option value="TUBER_CURED_1P">🍠 Umbi Curing 1P (Sumedang Cilembu)</option>
+                  <option value="PROTEIN_1P">🍗 Unggas & Telur 1P (Peternak Lembang)</option>
+                  <option value="SPICE_3P">🌶️ Bumbu & Cabai 3P (Pasar Induk Caringin)</option>
+                  <option value="STAPLE_3P">🌾 Sembako Pokok 3P (Beras / Minyak Goreng)</option>
                 </select>
               </div>
 
-              {/* Harga Modal vs Harga Jual */}
               <div className="grid grid-cols-2 gap-3 p-3.5 bg-stone-50 rounded-2xl border border-stone-200">
-                <div className="space-y-1">
-                  <label className="font-bold text-stone-700">Modal Petani / HPP (Rp)</label>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Modal Petani / HPP (Rp)
+                  </label>
                   <input
                     type="number"
                     min="500"
-                    step="500"
-                    required
+                    step="100"
                     value={formModalPrice}
                     onChange={(e) => setFormModalPrice(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl font-mono text-stone-900 font-bold focus:outline-none focus:border-[#24B05A]"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] font-mono font-bold text-stone-900"
+                    required
                   />
-                  <span className="text-[10px] text-stone-400 block">Hak Petani/Vendor</span>
+                  <span className="text-[10px] text-stone-400 mt-0.5 block">Hak Petani/Vendor</span>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-stone-700">Harga Jual Warga (Rp)</label>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Harga Jual Warga (Rp)
+                  </label>
                   <input
                     type="number"
                     min="500"
-                    step="500"
-                    required
+                    step="100"
                     value={formSellPrice}
                     onChange={(e) => setFormSellPrice(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl font-mono text-stone-900 font-bold focus:outline-none focus:border-[#24B05A]"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] font-mono font-bold text-stone-900"
+                    required
                   />
-                  <span className="text-[10px] text-stone-400 block">Tampil di Katalog</span>
+                  <span className="text-[10px] text-stone-400 mt-0.5 block">Tampil di Katalog</span>
                 </div>
 
                 <div className="col-span-2 pt-2 border-t border-stone-200 flex items-center justify-between text-xs">
                   <span className="text-stone-600 font-medium">Margin Operasional Kotor:</span>
                   <span
-                    className={`font-mono font-extrabold px-2 py-0.5 rounded-full text-[11px] ${
-                      isMarginHealthy
+                    className={`font-mono font-bold px-2 py-0.5 rounded-full text-xs ${
+                      calculatedMarginPct >= 20
                         ? 'bg-emerald-100 text-emerald-800'
+                        : calculatedMarginPct >= 10
+                        ? 'bg-sky-100 text-sky-800'
                         : 'bg-rose-100 text-rose-800'
                     }`}
                   >
@@ -553,33 +627,228 @@ export default function AdminProdukPage() {
                 </div>
               </div>
 
-              {/* Deskripsi */}
-              <div className="space-y-1">
-                <label className="font-bold text-stone-800">Deskripsi Panen & Kesegaran</label>
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Deskripsi Panen & Kesegaran
+                </label>
                 <textarea
                   rows={2}
-                  placeholder="e.g. Dipetik embun subuh jam 03.00 WIB, bebas residu pestisida, siap simpan kulkas 7 hari."
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 text-xs focus:outline-none focus:border-[#24B05A]"
+                  placeholder="e.g. Dipetik embun subuh jam 03.00 WIB, bebas residu pestisida, siap simpan kulkas 7 hari."
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] text-stone-900"
                 />
               </div>
 
-              {/* Submit Buttons */}
-              <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 text-stone-600 font-bold hover:bg-stone-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-100 rounded-xl transition cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#24B05A] hover:bg-[#1B8A44] text-white font-extrabold rounded-xl shadow-xs transition hover:scale-102 flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2.5 bg-[#24B05A] hover:bg-[#1B8A44] text-white text-xs font-extrabold rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>Terbitkan ke Katalog Warga</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL FORM EDIT KOMODITAS & HARGA */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 space-y-6 max-h-[90vh] overflow-y-auto animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-stone-100 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-stone-900 leading-tight">
+                    Ubah Komoditas & Fiksasi Harga
+                  </h3>
+                  <span className="text-[11px] text-stone-500 font-normal">
+                    ID: {editingProduct.id} • SKU: {editingProduct.sku}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEditingProduct(null)}
+                className="p-1.5 text-stone-400 hover:text-stone-700 rounded-xl hover:bg-stone-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditProduct} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Nama Komoditas / Hasil Panen *
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-stone-900 font-medium"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Kode SKU *
+                  </label>
+                  <input
+                    type="text"
+                    value={editSku}
+                    onChange={(e) => setEditSku(e.target.value.toUpperCase())}
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono uppercase text-stone-900 font-bold"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Satuan Porsi Dapur *
+                  </label>
+                  <select
+                    value={editUnit}
+                    onChange={(e) => setEditUnit(e.target.value)}
+                    className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-stone-900 font-medium"
+                  >
+                    <option value="pack (250gr)">pack (250gr)</option>
+                    <option value="pack (200gr)">pack (200gr)</option>
+                    <option value="ikat (250gr)">ikat (250gr)</option>
+                    <option value="ikat (300gr)">ikat (300gr)</option>
+                    <option value="500gr">500gr</option>
+                    <option value="kg">kg</option>
+                    <option value="kg (16 butir)">kg (16 butir)</option>
+                    <option value="pouch 2L">pouch 2L</option>
+                    <option value="karung 5kg">karung 5kg</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Kategori Rantai Pasok *
+                </label>
+                <select
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value as any)}
+                  className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-stone-900 font-medium"
+                >
+                  <option value="VEGETABLE_1P">🥬 Sayuran Daun 1P (Petani Ciwidey/Lembang)</option>
+                  <option value="TUBER_CURED_1P">🍠 Umbi Curing 1P (Sumedang Cilembu)</option>
+                  <option value="PROTEIN_1P">🍗 Unggas & Telur 1P (Peternak Lembang)</option>
+                  <option value="SPICE_3P">🌶️ Bumbu & Cabai 3P (Pasar Induk Caringin)</option>
+                  <option value="STAPLE_3P">🌾 Sembako Pokok 3P (Beras / Minyak Goreng)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-3.5 bg-sky-50/60 rounded-2xl border border-sky-200">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Modal Petani / HPP (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    min="500"
+                    step="100"
+                    value={editModalPrice}
+                    onChange={(e) => setEditModalPrice(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono font-bold text-stone-900"
+                    required
+                  />
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">HPP Masuk Sistem</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Harga Jual Warga (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    min="500"
+                    step="100"
+                    value={editSellPrice}
+                    onChange={(e) => setEditSellPrice(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono font-bold text-stone-900"
+                    required
+                  />
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">Harga di Toko</span>
+                </div>
+
+                <div className="col-span-2 pt-2 border-t border-sky-200 flex items-center justify-between text-xs">
+                  <span className="text-stone-700 font-medium">Margin Operasional Baru:</span>
+                  <span
+                    className={`font-mono font-bold px-2 py-0.5 rounded-full text-xs ${
+                      calculatedEditMarginPct >= 20
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : calculatedEditMarginPct >= 10
+                        ? 'bg-sky-100 text-sky-800'
+                        : 'bg-rose-100 text-rose-800'
+                    }`}
+                  >
+                    {calculatedEditMarginPct}% ({formatRupiah(editSellPrice - editModalPrice)})
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Deskripsi Panen & Kesegaran
+                </label>
+                <textarea
+                  rows={2}
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-stone-900"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200">
+                <div>
+                  <span className="text-xs font-bold text-stone-800 block">Status Tayang Etalase</span>
+                  <span className="text-[11px] text-stone-500">
+                    Aktifkan jika stok sayur tersedia untuk dibeli warga
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditIsActive(!editIsActive)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    editIsActive ? 'bg-emerald-500 text-white shadow-xs' : 'bg-stone-200 text-stone-600'
+                  }`}
+                >
+                  {editIsActive ? '✓ Aktif Tayang' : '⚪ Dinonaktifkan'}
+                </button>
+              </div>
+
+              <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-100 rounded-xl transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-extrabold rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
                 </button>
               </div>
             </form>
