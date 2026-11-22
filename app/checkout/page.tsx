@@ -20,7 +20,7 @@ import {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, cartTotal, clearCart, selectedCluster, currentUser, isGroupBuyEligible, projectedCashback } = useApp();
+  const { cart, cartTotal, clearCart, selectedCluster, currentUser, isGroupBuyEligible, projectedCashback, addNewOrder } = useApp();
 
   // Fallback to sample items if cart is empty for immediate demonstration
   const effectiveCart = cart.length > 0 ? cart : [
@@ -66,6 +66,33 @@ export default function CheckoutPage() {
 
   const handleConfirmMidtransPayment = () => {
     setPaymentSuccess(true);
+    const newOrderObj = {
+      id: `ord-${Date.now()}`,
+      order_number: orderNumber,
+      cycle_id: 'd1',
+      cluster_id: selectedCluster.id,
+      cluster_name: selectedCluster.name,
+      customer_id: currentUser.id,
+      customer_name: fullName,
+      customer_phone: phone,
+      customer_address: houseAddress,
+      items: effectiveCart.map((item) => ({
+        product_id: item.product.id,
+        product_name: item.product.name,
+        portion_label: item.product.unit,
+        qty: item.qty,
+        unit_price: item.price.sell_price_idr,
+      })),
+      total_amount_idr: grandTotal,
+      payment_status: 'PAID' as const,
+      delivery_status: 'SCHEDULED' as const,
+      is_group_buy_qualified: isGroupBuyEligible,
+      cashback_amount_idr: projectedCashback,
+      delivery_slot: 'Besok 06.00 - 09.00 WIB',
+      created_at: new Date().toISOString(),
+    };
+    addNewOrder(newOrderObj);
+
     setTimeout(() => {
       setShowSnapModal(false);
       clearCart();

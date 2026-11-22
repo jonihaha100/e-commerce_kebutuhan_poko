@@ -110,6 +110,8 @@ export default function StorefrontHomePage() {
     groupBuyTargetSlots,
     isGroupBuyEligible,
     projectedCashback,
+    products,
+    catalogPrices,
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,14 +146,19 @@ export default function StorefrontHomePage() {
     { id: 'CHILI_3P', label: 'Cabai & Bawang (3P)', icon: '🌶️' },
   ];
 
+  // Active products master from AppContext
+  const activeProductList = products && products.length > 0 ? products : initialProducts;
+
   // Filtered products based on search and category
-  const filteredProducts = initialProducts.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'ALL' || p.category_type === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = activeProductList
+    .filter((p) => p.is_active)
+    .filter((p) => {
+      const matchesSearch =
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'ALL' || p.category_type === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
@@ -392,8 +399,16 @@ export default function StorefrontHomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {filteredProducts.map((product) => {
+            const catalogPriceEntry = catalogPrices.find((cp) => cp.product_id === product.id);
+            const dynamicBasePrice = catalogPriceEntry?.sell_price_idr || 15000;
             const portionList = CATALOG_PORTIONS[product.id] || [
-              { label: product.unit, price: 15000, farmerSplit: 10000, opsSplit: 5000, marketBenchmark: 18000 },
+              {
+                label: product.unit,
+                price: dynamicBasePrice,
+                farmerSplit: Math.round(dynamicBasePrice * 0.7),
+                opsSplit: Math.round(dynamicBasePrice * 0.3),
+                marketBenchmark: Math.round(dynamicBasePrice * 1.15),
+              },
             ];
 
             const selectedIdx = selectedPortions[product.id] || 0;

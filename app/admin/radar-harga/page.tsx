@@ -38,6 +38,7 @@ import {
   RefreshCw,
   Info,
 } from 'lucide-react';
+import { AdminHeader } from '@/components/AdminHeader';
 
 export default function RadarHargaAdminPage() {
   const [products] = useState<Product[]>(initialProducts);
@@ -185,7 +186,9 @@ export default function RadarHargaAdminPage() {
   const timeWIB = getJakartaTimeString(new Date(), false);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12 space-y-8">
+    <div className="min-h-screen bg-stone-50 pb-16">
+      <AdminHeader />
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-8">
       {/* Header with Brand Logo */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -436,7 +439,7 @@ export default function RadarHargaAdminPage() {
           <div className="pt-2 flex justify-end">
             <button
               onClick={handleApproveAndPublish}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2"
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
             >
               <Lock className="w-4 h-4" />
               <span>Approve & Publish to Storefront</span>
@@ -444,6 +447,7 @@ export default function RadarHargaAdminPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

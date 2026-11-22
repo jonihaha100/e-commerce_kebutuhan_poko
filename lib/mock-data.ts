@@ -76,12 +76,25 @@ export interface DailyCatalogPrice {
   published_at?: string;
 }
 
+export interface OrderItem {
+  product_id: string;
+  product_name: string;
+  portion_label: string;
+  qty: number;
+  unit_price: number;
+}
+
 export interface Order {
   id: string;
   order_number: string;
   cycle_id: string;
   cluster_id: string;
+  cluster_name?: string;
   customer_id: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_address?: string;
+  items?: OrderItem[];
   total_amount_idr: number;
   payment_status: 'PENDING' | 'PAID' | 'CANCELLED' | 'REFUNDED';
   delivery_status: 'SCHEDULED' | 'DISPATCHED_TO_HUB' | 'READY_AT_CHECKPOINT' | 'DELIVERED';
@@ -545,5 +558,97 @@ export const initialAiAlerts: AiAgentAlert[] = [
     description: 'Harga penawaran modal grosir 3P Rp16.500 lebih tinggi 28% dari benchmark Bapanas Bandung (Rp12.800). Butuh review admin.',
     is_resolved: false,
     created_at: new Date().toISOString(),
+  },
+];
+
+export const initialOrders: Order[] = [
+  {
+    id: 'ord-001',
+    order_number: 'ORD-892101',
+    cycle_id: 'd1',
+    cluster_id: 'c1111111-1111-1111-1111-111111111111',
+    cluster_name: 'Antapani Indah',
+    customer_id: 'a0000000-0000-0000-0000-000000000005',
+    customer_name: 'Ibu Ani Suryani',
+    customer_phone: '081234567894',
+    customer_address: 'Jl. Antapani Raya No. 42 Blok B',
+    items: [
+      { product_id: 'p0000000-0000-0000-0000-000000000002', product_name: 'Pakcoy Hidroponik Lembang', portion_label: 'pack (250gr)', qty: 2, unit_price: 3500 },
+      { product_id: 'p0000000-0000-0000-0000-000000000004', product_name: 'Ayam Filet Dada Segar', portion_label: '500gr', qty: 1, unit_price: 24000 },
+      { product_id: 'p0000000-0000-0000-0000-000000000005', product_name: 'Telur Ayam Negeri Fresh Subuh', portion_label: '1 kg (16 butir)', qty: 1, unit_price: 28500 },
+    ],
+    total_amount_idr: 59500,
+    payment_status: 'PAID',
+    delivery_status: 'DISPATCHED_TO_HUB',
+    is_group_buy_qualified: true,
+    cashback_amount_idr: 5950,
+    delivery_slot: 'Besok 06.00 - 09.00 WIB',
+    created_at: '2026-11-22T17:15:00+07:00',
+  },
+  {
+    id: 'ord-002',
+    order_number: 'ORD-892102',
+    cycle_id: 'd1',
+    cluster_id: 'c1111111-1111-1111-1111-111111111111',
+    cluster_name: 'Antapani Indah',
+    customer_id: 'a0000000-0000-0000-0000-000000000006',
+    customer_name: 'Ibu Dewi Sartika',
+    customer_phone: '081298765432',
+    customer_address: 'Komplek Antapani Indah Blok C No. 10',
+    items: [
+      { product_id: 'p0000000-0000-0000-0000-000000000001', product_name: 'Ubi Cilembu Madu Sumedang', portion_label: '1 kg', qty: 2, unit_price: 18000 },
+      { product_id: 'p0000000-0000-0000-0000-000000000008', product_name: 'Cabai Rawit Merah Domba', portion_label: 'pack (200gr)', qty: 1, unit_price: 9000 },
+    ],
+    total_amount_idr: 45000,
+    payment_status: 'PAID',
+    delivery_status: 'SCHEDULED',
+    is_group_buy_qualified: true,
+    cashback_amount_idr: 4500,
+    delivery_slot: 'Besok 06.00 - 09.00 WIB',
+    created_at: '2026-11-22T17:40:00+07:00',
+  },
+  {
+    id: 'ord-003',
+    order_number: 'ORD-892103',
+    cycle_id: 'd1',
+    cluster_id: 'c2222222-2222-2222-2222-222222222222',
+    cluster_name: 'Arcamanik Endah',
+    customer_id: 'a0000000-0000-0000-0000-000000000007',
+    customer_name: 'Bapak Hendra Gunawan',
+    customer_phone: '081311223344',
+    customer_address: 'Jl. Pesona Arcamanik Blok D5',
+    items: [
+      { product_id: 'p0000000-0000-0000-0000-000000000007', product_name: 'Beras Pandanwangi Cianjur Asli', portion_label: '5 kg', qty: 1, unit_price: 78000 },
+      { product_id: 'p0000000-0000-0000-0000-000000000010', product_name: 'Minyak Goreng Sawit Pouch 2L', portion_label: 'pouch 2L', qty: 1, unit_price: 34000 },
+    ],
+    total_amount_idr: 112000,
+    payment_status: 'PAID',
+    delivery_status: 'SCHEDULED',
+    is_group_buy_qualified: true,
+    cashback_amount_idr: 11200,
+    delivery_slot: 'Besok 06.00 - 09.00 WIB',
+    created_at: '2026-11-22T18:10:00+07:00',
+  },
+  {
+    id: 'ord-004',
+    order_number: 'ORD-892104',
+    cycle_id: 'd1',
+    cluster_id: 'c1111111-1111-1111-1111-111111111111',
+    cluster_name: 'Antapani Indah',
+    customer_id: 'a0000000-0000-0000-0000-000000000008',
+    customer_name: 'Ibu Ratna Kumala',
+    customer_phone: '081255667788',
+    customer_address: 'Jl. Antapani Selatan Blok A No. 15',
+    items: [
+      { product_id: 'p0000000-0000-0000-0000-000000000006', product_name: 'Kangkung Petik Fajar Lembang', portion_label: 'ikat (500gr)', qty: 2, unit_price: 3500 },
+      { product_id: 'p0000000-0000-0000-0000-000000000009', product_name: 'Bawang Merah Brebes Pilihan', portion_label: '500gr', qty: 1, unit_price: 18000 },
+    ],
+    total_amount_idr: 25000,
+    payment_status: 'PENDING',
+    delivery_status: 'SCHEDULED',
+    is_group_buy_qualified: false,
+    cashback_amount_idr: 0,
+    delivery_slot: 'Besok 06.00 - 09.00 WIB',
+    created_at: '2026-11-22T18:25:00+07:00',
   },
 ];
