@@ -46,7 +46,7 @@ export default function RootLayout({
                   Rantai Pasok Pangan Terintegrasi • Pilot Perumahan Bandung (Antapani • Arcamanik • Buah Batu)
                 </p>
                 <p className="text-[11px] text-stone-400">
-                  Zona Waktu Operasional: Asia/Jakarta (WIB) • Proteksi Pagar Anti-ATM & Row Level Security
+                  Pengantaran Segar Subuh Setiap Hari • Hub Central Bandung • Hak Cipta Dilindungi
                 </p>
               </div>
             </footer>

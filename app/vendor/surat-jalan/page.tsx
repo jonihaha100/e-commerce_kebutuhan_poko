@@ -52,12 +52,12 @@ export default function VendorSuratJalanPage() {
         </div>
       </div>
 
-      {/* Anti-ATM Shield Banner */}
+      {/* Privacy Shield Banner */}
       <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-emerald-700 flex-shrink-0 mt-0.5" />
         <div className="text-xs text-emerald-950 leading-relaxed">
-          <b className="block text-emerald-900 mb-0.5">Pagar Pengaman Privasi Anti-ATM Aktif</b>
-          Berdasarkan kebijakan keamanan ketat RLS (*Row Level Security*), vendor hanya memiliki akses baca terhadap total tonase koli agregat yang harus dikirim ke Hub Central. Detail eceran customer, nama pemesan, dan data komplek warga sepenuhnya terproteksi (0 baris dikembalikan).
+          <b className="block text-emerald-900 mb-0.5">Proteksi Privasi & Keamanan Data Warga</b>
+          Vendor hanya memiliki akses terhadap total kuantitas tonase agregat yang harus dikirim ke Central Hub. Data pribadi pemesan dan alamat rumah warga tersimpan aman dan terproteksi.
         </div>
       </div>
 
