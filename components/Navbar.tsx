@@ -106,7 +106,7 @@ export function Navbar({ onOpenCart }: { onOpenCart: () => void }) {
           </Link>
         </div>
 
-        {/* Center Links (Fokus Belanja & Lacak Pengantaran ala Astro) */}
+        {/* Center Links (Fokus Belanja & Lacak Pengantaran Pelanggan) */}
         <ul className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#475569]">
           <li>
             <Link
@@ -128,30 +128,6 @@ export function Navbar({ onOpenCart }: { onOpenCart: () => void }) {
               Lacak Pesanan
             </Link>
           </li>
-
-          {/* Role specific links (Hanya tampil untuk staf/pengelola) */}
-          {currentUser.role === 'ADMIN' && (
-            <li>
-              <Link
-                href="/admin/radar-harga"
-                className="px-2.5 py-1 bg-[#EFF6FF] text-[#1D4ED8] hover:bg-[#DBEAFE] rounded-lg font-bold transition flex items-center gap-1 border border-[#BFDBFE]"
-              >
-                <Sparkles className="w-3 h-3 text-[#2563EB]" />
-                Radar Harga
-              </Link>
-            </li>
-          )}
-
-          {(currentUser.role === 'VENDOR_PETANI' || currentUser.role === 'VENDOR_PASAR_3P') && (
-            <li>
-              <Link
-                href="/vendor/input-harian"
-                className="px-2.5 py-1 bg-[#FEF3C7] text-[#92400E] hover:bg-[#FDE68A] rounded-lg font-bold transition border border-[#FCD34D]"
-              >
-                Portal Hulu
-              </Link>
-            </li>
-          )}
         </ul>
 
         {/* Right Controls */}

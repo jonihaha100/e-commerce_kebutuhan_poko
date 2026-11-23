@@ -571,7 +571,7 @@ export default function StorefrontHomePage() {
                           : 'bg-[#FEF3C7] text-[#92400E] border border-[#FCD34D]'
                       }`}
                     >
-                      {product.is_1p ? '🌱 1P Petani' : '🏬 3P Grosir'}
+                      {product.is_1p ? '🌱 Panen Segar' : '🏬 Pangan Pokok'}
                     </span>
 
                     <span className="text-[9px] font-bold text-slate-400">
@@ -614,22 +614,6 @@ export default function StorefrontHomePage() {
                         {portion.label}
                       </button>
                     ))}
-                  </div>
-
-                  {/* Open-Book Split Breakdown */}
-                  <div className="p-2 bg-slate-50 rounded-lg border border-slate-100 text-[10px] space-y-0.5 text-slate-500">
-                    <div className="flex justify-between">
-                      <span>🌾 Modal Petani:</span>
-                      <span className="font-bold text-slate-700">
-                        {formatRupiah(currentPortion.farmerSplit)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>📦 Biaya Kemas & Ops:</span>
-                      <span className="font-bold text-slate-700">
-                        {formatRupiah(currentPortion.opsSplit)}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
@@ -785,7 +769,7 @@ export default function StorefrontHomePage() {
                         : 'bg-[#FEF3C7] text-[#92400E] border border-[#FCD34D]'
                     }`}
                   >
-                    {detailProduct.is_1p ? '🌱 1P Petani' : '🏬 3P Grosir'}
+                    {detailProduct.is_1p ? '🌱 Panen Segar' : '🏬 Pangan Pokok'}
                   </span>
                   <span className="text-[11px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1">
                     <Clock className="w-3 h-3 text-amber-500" />
@@ -863,9 +847,9 @@ export default function StorefrontHomePage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1.5 border-t border-slate-200/60">
-                    <span>🌾 Modal Petani: <b>{formatRupiah(currentPortion.farmerSplit)}</b></span>
-                    <span>📦 Kemas & Distribusi: <b>{formatRupiah(currentPortion.opsSplit)}</b></span>
+                  <div className="flex items-center justify-between text-[11px] text-emerald-800 font-semibold pt-1.5 border-t border-slate-200/60">
+                    <span className="flex items-center gap-1">🌱 Langsung dari Kebun Petani</span>
+                    <span className="flex items-center gap-1">🛡️ Garansi Segar Subuh</span>
                   </div>
                 </div>
 
