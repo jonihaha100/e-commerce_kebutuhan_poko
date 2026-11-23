@@ -110,16 +110,16 @@ export function AdminHeader() {
       </div>
 
       {/* Main Admin Navigation */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row lg:items-center justify-between gap-3 py-2.5">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <Link href="/admin/produk" className="flex items-center gap-2.5">
             <img
               src="/brand-logo.png"
               alt="Logo"
-              className="w-9 h-9 object-contain rounded-full border border-sky-400/50 bg-white p-0.5"
+              className="w-8 h-8 object-contain rounded-full border border-sky-400/50 bg-white p-0.5"
             />
             <div>
-              <h1 className="text-base font-black tracking-tight text-white leading-tight">
+              <h1 className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
                 Berkah Tani Sejahtera
               </h1>
               <span className="text-[10px] font-mono tracking-wider text-sky-400 uppercase font-semibold">
@@ -129,8 +129,8 @@ export function AdminHeader() {
           </Link>
         </div>
 
-        {/* Tab navigation buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        {/* Tab navigation buttons with clean no-scrollbar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 max-w-full">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href;
             const Icon = tab.icon;
@@ -138,17 +138,17 @@ export function AdminHeader() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                   isActive
                     ? 'bg-[#24B05A] text-white shadow-md shadow-emerald-950/40'
                     : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <span
-                    className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono ${
+                    className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono ${
                       isActive
                         ? 'bg-emerald-950 text-emerald-200'
                         : 'bg-slate-800 text-slate-400'

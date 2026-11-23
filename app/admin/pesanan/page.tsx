@@ -316,7 +316,7 @@ export default function AdminPesananPage() {
 
           <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-stone-100">
             {/* Cluster filters */}
-            <div className="flex items-center gap-1.5 overflow-x-auto">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mr-1">
                 Komplek:
               </span>

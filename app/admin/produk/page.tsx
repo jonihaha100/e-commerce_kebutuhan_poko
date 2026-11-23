@@ -307,7 +307,7 @@ export default function AdminProdukPage() {
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
             {categoryOptions.map((cat) => (
               <button
                 key={cat.id}
