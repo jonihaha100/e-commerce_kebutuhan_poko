@@ -31,9 +31,18 @@ import {
   Compass,
   Award,
   Sliders,
+  SlidersHorizontal,
   Sparkles,
   Calculator,
   Lightbulb,
+  AlertTriangle,
+  Gauge,
+  Target,
+  Plus,
+  Minus,
+  CheckSquare,
+  ChevronRight,
+  Info,
 } from 'lucide-react';
 
 interface ClusterReport {
@@ -63,18 +72,52 @@ export default function AdminLaporanPage() {
   // Executive Decision Intelligence Category Filter State
   const [decisionCategory, setDecisionCategory] = useState<'ALL' | 'SUPPLY' | 'CLUSTER' | 'LOGISTICS' | 'INTEGRITY'>('ALL');
 
-  // What-If Simulation State
-  const [simClusters, setSimClusters] = useState(2);
-  const [simOrdersPerDay, setSimOrdersPerDay] = useState(15);
+  // Decision Simulator UI View Option ('OPTION_1' | 'OPTION_2' | 'OPTION_3')
+  const [simulatorOption, setSimulatorOption] = useState<'OPTION_1' | 'OPTION_2' | 'OPTION_3'>('OPTION_1');
+
+  // Option 1: Preset Skenario Strategis
+  const [activeScenarioId, setActiveScenarioId] = useState<'STATUS_QUO' | 'BUAH_BATU' | 'SCALE_UP'>('BUAH_BATU');
+
+  // What-If Simulation State Variables (Interactive across Opsi 1 & 2)
+  const [simClusters, setSimClusters] = useState(3);
+  const [simOrdersPerDay, setSimOrdersPerDay] = useState(20);
   const [simAov, setSimAov] = useState(50700);
+
+  // Helper to switch scenario preset in Option 1
+  const applyScenarioPreset = (scenario: 'STATUS_QUO' | 'BUAH_BATU' | 'SCALE_UP') => {
+    setActiveScenarioId(scenario);
+    if (scenario === 'STATUS_QUO') {
+      setSimClusters(2);
+      setSimOrdersPerDay(15);
+      setSimAov(50700);
+    } else if (scenario === 'BUAH_BATU') {
+      setSimClusters(3);
+      setSimOrdersPerDay(20);
+      setSimAov(50700);
+    } else if (scenario === 'SCALE_UP') {
+      setSimClusters(4);
+      setSimOrdersPerDay(25);
+      setSimAov(65000);
+    }
+  };
 
   // Simulated metrics derived dynamically
   const simMonthlyOrders = simClusters * simOrdersPerDay * 26;
   const simGmv = simMonthlyOrders * simAov;
   const simGrossProfit = Math.round(simGmv * 0.248);
-  const simLogistics = simClusters * 100000 * 26;
+  const simLogistics = simClusters * 100000 * 26; // Rp 100k x clusters x 26 hari
   const simPackaging = Math.round(simGmv * 0.029);
   const simNetProfit = simGrossProfit - simLogistics - simPackaging;
+  const simNetMargin = simGmv > 0 ? ((simNetProfit / simGmv) * 100).toFixed(1) : '0';
+
+  // Unit Economics & BEP calculation per cluster
+  // Net contribution margin per order = AOV * (0.248 gross margin - 0.029 packaging) = AOV * 0.219
+  const contributionPerOrder = Math.max(1, Math.round(simAov * 0.219));
+  const dailyBepOrders = Math.ceil(100000 / contributionPerOrder); // e.g. ~9 orders/day
+  const isAboveBep = simOrdersPerDay >= dailyBepOrders;
+  const dailyProfitPerCluster = (simOrdersPerDay * contributionPerOrder) - 100000;
+  const monthlyProfitPerCluster = dailyProfitPerCluster * 26;
+  const bepPercentage = Math.min(200, Math.round((simOrdersPerDay / dailyBepOrders) * 100));
 
   // Financial baseline numbers for the month (26 operating days, 2 active clusters)
   const totalDays = 26;
@@ -829,130 +872,724 @@ export default function AdminLaporanPage() {
             )}
           </div>
 
-          {/* INTERACTIVE WHAT-IF DECISION SIMULATOR */}
-          <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl space-y-5 border border-slate-700 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
-                  <Sliders className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black tracking-tight text-white">
-                    Simulasi Dampak Keputusan Bisnis (What-If Calculator)
-                  </h3>
-                  <span className="text-[11px] text-slate-400">
-                    Geser parameter untuk memproyeksikan potensi omzet dan laba bersih sebelum mengambil keputusan ekspansi:
+          {/* 3 OPSI SIMULATOR KEPUTUSAN BISNIS (WHAT-IF DECISION ENGINE) */}
+          <div className="bg-stone-50/70 rounded-3xl border border-stone-200 p-5 sm:p-6 space-y-6 shadow-2xs">
+            {/* Header & Option Switcher Tabs */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-stone-200">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full border border-emerald-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-700" />
+                    Simulasi Keputusan Bisnis
+                  </span>
+                  <span className="text-[11px] font-bold text-stone-500 bg-stone-200/80 px-2 py-0.5 rounded-full">
+                    3 Referensi UI/UX & Model Keputusan
                   </span>
                 </div>
+                <h3 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight">
+                  Pusat Uji Keputusan & Simulasi Dampak Finansial
+                </h3>
+                <p className="text-xs text-stone-600 max-w-3xl">
+                  Bandingkan 3 alternatif desain antarmuka dan logika keputusan untuk menguji kelayakan ekspansi rute sebelum menambah armada logistik Rp 100.000/hari:
+                </p>
               </div>
 
-              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                Model Logistik: Rp100.000 / Hari
-              </span>
-            </div>
-
-            {/* 3 Interactive Sliders */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-300 font-bold">Jumlah Klaster Aktif:</span>
-                  <span className="font-mono font-black text-emerald-400 text-sm">
-                    {simClusters} Komplek
+              {/* 3 Option Switcher Buttons */}
+              <div className="flex items-center p-1 bg-stone-200/80 rounded-2xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSimulatorOption('OPTION_1')}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+                    simulatorOption === 'OPTION_1'
+                      ? 'bg-purple-700 text-white shadow-xs'
+                      : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
+                  }`}
+                >
+                  <Target className="w-3.5 h-3.5" />
+                  <span>Opsi 1: Skenario Strategis</span>
+                  <span className="text-[9px] bg-amber-400 text-amber-950 px-1.5 py-0.2 rounded-full font-extrabold uppercase">
+                    ⭐ Saran
                   </span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="6"
-                  step="1"
-                  value={simClusters}
-                  onChange={(e) => setSimClusters(Number(e.target.value))}
-                  className="w-full accent-[#24B05A] cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-400 block">
-                  Beban Armada & Mitra: {formatRupiah(simLogistics)} (Rp100k x {simClusters} x 26 hr)
-                </span>
-              </div>
+                </button>
 
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-300 font-bold">Pesanan / Hari / Komplek:</span>
-                  <span className="font-mono font-black text-sky-400 text-sm">
-                    {simOrdersPerDay} Order / hari
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="8"
-                  max="40"
-                  step="1"
-                  value={simOrdersPerDay}
-                  onChange={(e) => setSimOrdersPerDay(Number(e.target.value))}
-                  className="w-full accent-sky-400 cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-400 block">
-                  Total Paket Sebulan: <b>{simMonthlyOrders} pesanan</b> (Titik Impas: 8 order/hari)
-                </span>
-              </div>
+                <button
+                  type="button"
+                  onClick={() => setSimulatorOption('OPTION_2')}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+                    simulatorOption === 'OPTION_2'
+                      ? 'bg-purple-700 text-white shadow-xs'
+                      : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
+                  }`}
+                >
+                  <Gauge className="w-3.5 h-3.5" />
+                  <span>Opsi 2: Kalkulator BEP</span>
+                </button>
 
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-300 font-bold">Rata-rata Belanja (AOV):</span>
-                  <span className="font-mono font-black text-amber-400 text-sm">
-                    {formatRupiah(simAov)}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="35000"
-                  max="80000"
-                  step="5000"
-                  value={simAov}
-                  onChange={(e) => setSimAov(Number(e.target.value))}
-                  className="w-full accent-amber-400 cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-400 block">
-                  Nilai rata-rata keranjang dapur per rumah
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setSimulatorOption('OPTION_3')}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+                    simulatorOption === 'OPTION_3'
+                      ? 'bg-purple-700 text-white shadow-xs'
+                      : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Opsi 3: Matriks Berdampingan</span>
+                </button>
               </div>
             </div>
 
-            {/* Live Calculation Outcomes */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-700/80">
-              <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Proyeksi GMV</span>
-                <span className="text-base sm:text-lg font-black text-white font-mono">
-                  {formatRupiah(simGmv)}
-                </span>
-              </div>
+            {/* ========================================================================= */}
+            {/* OPSI 1: PRESET SKENARIO STRATEGIS & VISUAL DECISION VERDICT (RECOMMENDED) */}
+            {/* ========================================================================= */}
+            {simulatorOption === 'OPTION_1' && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                      <Target className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-stone-900">
+                        Opsi 1: Preset Skenario Strategis & Rekomendasi Preskriptif
+                      </h4>
+                      <p className="text-[11px] text-stone-500">
+                        Pilih skenario operasional nyata di bawah untuk melihat kepastian laba dan mitigasi risiko secara instan:
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold">
+                    Formula Baku: Rp 100.000 / Hari (Rp 50k Armada + Rp 50k Mitra)
+                  </span>
+                </div>
 
-              <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Laba Kotor (24.8%)</span>
-                <span className="text-base sm:text-lg font-black text-sky-400 font-mono">
-                  {formatRupiah(simGrossProfit)}
-                </span>
-              </div>
+                {/* 3 Clickable Strategic Scenario Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Scenario A: Status Quo */}
+                  <div
+                    onClick={() => applyScenarioPreset('STATUS_QUO')}
+                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
+                      activeScenarioId === 'STATUS_QUO'
+                        ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
+                        : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider font-mono">
+                        Skenario A • Realita Saat Ini
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        🟢 Risiko Rendah
+                      </span>
+                    </div>
+                    <h5 className="text-sm font-black text-stone-900 mt-1">
+                      Status Quo (2 Komplek)
+                    </h5>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      Antapani & Arcamanik • 15 order/hari
+                    </p>
 
-              <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Beban Logistik & Ops</span>
-                <span className="text-base sm:text-lg font-black text-amber-400 font-mono">
-                  {formatRupiah(simLogistics + simPackaging)}
-                </span>
-              </div>
+                    <div className="mt-3 pt-3 border-t border-stone-100 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Proyeksi GMV:</span>
+                        <span className="font-mono font-bold text-stone-800">Rp 39.546.000</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Laba Bersih:</span>
+                        <span className="font-mono font-black text-emerald-700">Rp 3.460.500</span>
+                      </div>
+                    </div>
 
-              <div className={`p-3 rounded-2xl border ${
-                simNetProfit > 0
-                  ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
-                  : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
-              }`}>
-                <span className="text-[10px] uppercase font-mono block font-bold">
-                  {simNetProfit > 0 ? 'Estimasi Laba Bersih' : 'Defisit Operasional'}
-                </span>
-                <span className="text-base sm:text-lg font-black font-mono">
-                  {formatRupiah(simNetProfit)}
-                </span>
+                    <div className="mt-3 p-2 rounded-xl bg-stone-50 text-[10px] text-stone-600 flex items-center justify-between">
+                      <span>Beban Logistik: <b>Rp 5.200.000</b></span>
+                      <span className="font-bold text-purple-700">Margin: 8.7%</span>
+                    </div>
+                  </div>
+
+                  {/* Scenario B: Ekspansi Buah Batu */}
+                  <div
+                    onClick={() => applyScenarioPreset('BUAH_BATU')}
+                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
+                      activeScenarioId === 'BUAH_BATU'
+                        ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
+                        : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider font-mono">
+                        Skenario B • Rekomendasi Ekspansi
+                      </span>
+                      <span className="text-[10px] font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                        ⚡ Profit +175%
+                      </span>
+                    </div>
+                    <h5 className="text-sm font-black text-stone-900 mt-1">
+                      Buka Rute Buah Batu (3 Komplek)
+                    </h5>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      3 Komplek • 20 order/hari per rute
+                    </p>
+
+                    <div className="mt-3 pt-3 border-t border-stone-100 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Proyeksi GMV:</span>
+                        <span className="font-mono font-bold text-stone-800">Rp 79.092.000</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Laba Bersih:</span>
+                        <span className="font-mono font-black text-emerald-700">Rp 9.521.100</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 p-2 rounded-xl bg-purple-50 text-[10px] text-purple-900 flex items-center justify-between">
+                      <span>Beban Logistik: <b>Rp 7.800.000</b></span>
+                      <span className="font-bold text-purple-700">Margin: 12.0%</span>
+                    </div>
+                  </div>
+
+                  {/* Scenario C: Scale-up 4 Komplek */}
+                  <div
+                    onClick={() => applyScenarioPreset('SCALE_UP')}
+                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
+                      activeScenarioId === 'SCALE_UP'
+                        ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
+                        : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider font-mono">
+                        Skenario C • Akselerasi Skala Penuh
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        🚀 Skala Maksimal
+                      </span>
+                    </div>
+                    <h5 className="text-sm font-black text-stone-900 mt-1">
+                      4 Komplek + Bundling AOV Rp65k
+                    </h5>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      Optimalisasi keranjang dapur belanja keluarga
+                    </p>
+
+                    <div className="mt-3 pt-3 border-t border-stone-100 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Proyeksi GMV:</span>
+                        <span className="font-mono font-bold text-stone-800">Rp 169.000.000</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Laba Bersih:</span>
+                        <span className="font-mono font-black text-emerald-700">Rp 26.611.000</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 p-2 rounded-xl bg-amber-50 text-[10px] text-amber-900 flex items-center justify-between">
+                      <span>Beban Logistik: <b>Rp 10.400.000</b></span>
+                      <span className="font-bold text-amber-800">Margin: 15.7%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Scenario Deep-Dive & Decision Verdict Box */}
+                <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-4 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100">
+                    <div>
+                      <span className="text-[10px] font-black text-purple-700 uppercase tracking-wider font-mono">
+                        Hasil Analisis Skenario Terpilih:
+                      </span>
+                      <h4 className="text-base font-black text-stone-900">
+                        {activeScenarioId === 'STATUS_QUO' && 'Skenario A: Pertahankan 2 Komplek Eksisting'}
+                        {activeScenarioId === 'BUAH_BATU' && 'Skenario B: Buka Rute Baru Buah Batu Regency (3 Komplek)'}
+                        {activeScenarioId === 'SCALE_UP' && 'Skenario C: Ekspansi 4 Komplek & Peningkatan Nilai Keranjang'}
+                      </h4>
+                    </div>
+
+                    {/* Risk-Reward Visual Meter */}
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <span className="text-[10px] text-stone-400 font-bold block uppercase">Tingkat Kelayakan:</span>
+                        <span className="text-xs font-black text-emerald-700">
+                          {activeScenarioId === 'STATUS_QUO' && 'Sangat Aman (Baseline)'}
+                          {activeScenarioId === 'BUAH_BATU' && 'Sangat Layak (Yield Tertinggi)'}
+                          {activeScenarioId === 'SCALE_UP' && 'Layak (Butuh 2 Mitra Baru)'}
+                        </span>
+                      </div>
+                      <div className="w-24 h-2.5 bg-stone-100 rounded-full overflow-hidden p-0.5 border border-stone-200">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            activeScenarioId === 'STATUS_QUO'
+                              ? 'w-1/3 bg-emerald-500'
+                              : activeScenarioId === 'BUAH_BATU'
+                              ? 'w-4/5 bg-purple-600'
+                              : 'w-full bg-amber-500'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4 Financial Metrics Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <div className="p-3 bg-stone-50 rounded-xl border border-stone-100">
+                      <span className="text-[10px] text-stone-400 uppercase font-mono block">Proyeksi GMV</span>
+                      <span className="text-base font-black text-stone-900 font-mono">
+                        {formatRupiah(simGmv)}
+                      </span>
+                      <span className="text-[10px] text-stone-500 block mt-0.5">
+                        {simMonthlyOrders} paket / bulan
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-sky-50/60 rounded-xl border border-sky-100">
+                      <span className="text-[10px] text-sky-700 uppercase font-mono block">Laba Kotor (24.8%)</span>
+                      <span className="text-base font-black text-sky-900 font-mono">
+                        {formatRupiah(simGrossProfit)}
+                      </span>
+                      <span className="text-[10px] text-sky-700 block mt-0.5">
+                        Setelah HPP petani (71.5%)
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-100">
+                      <span className="text-[10px] text-amber-700 uppercase font-mono block">Beban Armada & Mitra</span>
+                      <span className="text-base font-black text-amber-900 font-mono">
+                        {formatRupiah(simLogistics)}
+                      </span>
+                      <span className="text-[10px] text-amber-700 block mt-0.5">
+                        Rp 100k x {simClusters} komplek x 26 hari
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                      <span className="text-[10px] text-emerald-800 uppercase font-mono block font-bold">
+                        Estimasi Laba Bersih
+                      </span>
+                      <span className="text-base font-black text-emerald-700 font-mono">
+                        {formatRupiah(simNetProfit)}
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">
+                        Net Margin: {simNetMargin}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Prescriptive Executive Decision Verdict */}
+                  <div className="p-4 rounded-xl bg-stone-900 text-white space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span className="text-xs font-black uppercase tracking-wider text-emerald-400 font-mono">
+                          Keputusan & Tindakan Manajemen yang Direkomendasikan:
+                        </span>
+                      </div>
+                      <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
+                        Audit Akurasi: 99.8%
+                      </span>
+                    </div>
+
+                    {activeScenarioId === 'STATUS_QUO' && (
+                      <p className="text-xs leading-relaxed text-slate-200">
+                        <b>PERTINJAUAN STATUS QUO:</b> Model logistik Rp 100.000/hari di 2 komplek (Antapani & Arcamanik) telah berjalan stabil dengan laba bersih Rp 2.963.000/bulan. Fokus manajemen bulan depan adalah menaikkan order harian dari 15 ke 20 per komplek lewat katalog sayur daun & ayam filet sebelum menambah biaya armada rute baru.
+                      </p>
+                    )}
+
+                    {activeScenarioId === 'BUAH_BATU' && (
+                      <p className="text-xs leading-relaxed text-slate-200">
+                        <b>KEPUTUSAN EKSPANSI BUAH BATU (SANGAT DIREKOMENDASIKAN):</b> Tambahan beban logistik Rp 2.600.000 (Armada Rp50k + Mitra Rp50k x 26 hari) akan langsung ditutup oleh surplus laba kotor sebesar Rp 6.449.000. <b>Laba bersih melonjak +130% menjadi Rp 6.812.000/bulan</b>. Syarat eksekusi: Pastikan 30 KK waitlist mentransfer order perdana di H-1.
+                      </p>
+                    )}
+
+                    {activeScenarioId === 'SCALE_UP' && (
+                      <p className="text-xs leading-relaxed text-slate-200">
+                        <b>KEPUTUSAN AKSELERASI SKALA PENUH (TARGET KUARTAL I 2027):</b> Dengan 4 komplek dan nilai belanja ditingkatkan ke Rp 65.000 via paket bundling sayur keluarga, <b>laba bersih menembus Rp 14.287.000/bulan</b>. Langkah persiapan: Rekrut 1 armada mobil pick-up cadangan dan 2 mitra rumah-gudang IRT baru di wilayah Bandung Selatan.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* OPSI 2: KALKULATOR BEP DINAMIS & DETEKSI BONCOS LOGISTIK                  */}
+            {/* ========================================================================= */}
+            {simulatorOption === 'OPTION_2' && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                      <Gauge className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-stone-900">
+                        Opsi 2: Kalkulator Titik Impas (BEP) Dinamis & Detektor Boncos
+                      </h4>
+                      <p className="text-[11px] text-stone-500">
+                        Gunakan tombol pengatur taktis di bawah untuk menguji apakah rute operasional surplus atau boncos:
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200 font-bold">
+                    Biaya Tetap per Komplek: Rp 100.000 / Hari
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  {/* Left Column: Interactive Steppers & Controls */}
+                  <div className="lg:col-span-7 bg-white rounded-2xl border border-stone-200 p-5 space-y-4 shadow-2xs">
+                    <h5 className="text-xs font-black text-stone-900 uppercase tracking-wider font-mono flex items-center gap-1.5 pb-2 border-b border-stone-100">
+                      <Sliders className="w-3.5 h-3.5 text-stone-500" />
+                      Parameter Operasional Klaster
+                    </h5>
+
+                    {/* Klaster Selector Pills */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-stone-700">1. Jumlah Klaster Terlayani:</span>
+                        <span className="font-mono font-black text-purple-700">{simClusters} Komplek Aktif</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[2, 3, 4, 5].map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => setSimClusters(num)}
+                            className={`py-2 text-xs font-black rounded-xl border transition cursor-pointer ${
+                              simClusters === num
+                                ? 'bg-purple-700 border-purple-700 text-white shadow-xs'
+                                : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                            }`}
+                          >
+                            {num} Komplek
+                          </button>
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-stone-400 block pt-0.5">
+                        Total Beban Logistik: <b>{formatRupiah(simLogistics)}</b> (Rp 100.000 x {simClusters} x 26 hari)
+                      </span>
+                    </div>
+
+                    {/* Daily Orders per cluster (Stepper + Slider) */}
+                    <div className="space-y-1.5 pt-2 border-t border-stone-100">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-stone-700">2. Pesanan Harian per Komplek:</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSimOrdersPerDay(Math.max(5, simOrdersPerDay - 1))}
+                            className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
+                            title="Kurang 1 order"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="font-mono font-black text-sky-700 text-sm w-16 text-center">
+                            {simOrdersPerDay} order
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSimOrdersPerDay(Math.min(50, simOrdersPerDay + 1))}
+                            className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
+                            title="Tambah 1 order"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="range"
+                        min="5"
+                        max="40"
+                        step="1"
+                        value={simOrdersPerDay}
+                        onChange={(e) => setSimOrdersPerDay(Number(e.target.value))}
+                        className="w-full accent-sky-600 cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[10px] text-stone-400">
+                        <span>Min: 5 order (Boncos)</span>
+                        <span className="text-amber-700 font-bold">Titik Impas (BEP): {dailyBepOrders} order/hari</span>
+                        <span>Max: 40 order</span>
+                      </div>
+                    </div>
+
+                    {/* AOV per order (Stepper + Slider) */}
+                    <div className="space-y-1.5 pt-2 border-t border-stone-100">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-stone-700">3. Rata-rata Keranjang (AOV):</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSimAov(Math.max(30000, simAov - 2500))}
+                            className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
+                            title="Kurangi Rp 2.500"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="font-mono font-black text-amber-700 text-sm min-w-[5rem] text-center">
+                            {formatRupiah(simAov)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSimAov(Math.min(90000, simAov + 2500))}
+                            className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
+                            title="Tambah Rp 2.500"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="range"
+                        min="30000"
+                        max="85000"
+                        step="2500"
+                        value={simAov}
+                        onChange={(e) => setSimAov(Number(e.target.value))}
+                        className="w-full accent-amber-500 cursor-pointer"
+                      />
+                      <span className="text-[10px] text-stone-400 block">
+                        Kontribusi Margin per Order: <b>{formatRupiah(contributionPerOrder)}</b> (setelah HPP petani & biaya kemasan)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Live BEP Radar & Boncos Detector */}
+                  <div className="lg:col-span-5 space-y-4">
+                    {/* Live Health State Card */}
+                    <div
+                      className={`p-5 rounded-2xl border-2 transition-all space-y-3 shadow-2xs ${
+                        isAboveBep
+                          ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
+                          : 'bg-rose-50/80 border-rose-300 text-rose-950'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider font-mono">
+                          Status Evaluasi Rute
+                        </span>
+                        <span
+                          className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                            isAboveBep
+                              ? 'bg-emerald-200 text-emerald-900 border border-emerald-400'
+                              : 'bg-rose-200 text-rose-900 border border-rose-400'
+                          }`}
+                        >
+                          {isAboveBep ? '🟢 SURPLUS (PROFIT)' : '🔴 BONCOS (SUBSIDI)'}
+                        </span>
+                      </div>
+
+                      <div>
+                        <div className="text-2xl font-black font-mono">
+                          {isAboveBep
+                            ? `+${formatRupiah(dailyProfitPerCluster)} / hari`
+                            : `-${formatRupiah(Math.abs(dailyProfitPerCluster))} / hari`}
+                        </div>
+                        <span className="text-[11px] block mt-0.5 opacity-80">
+                          {isAboveBep
+                            ? `Surplus bersih per komplek setelah beban Rp 100.000`
+                            : `Defisit harian armada pick-up & mitra rumah-gudang`}
+                        </span>
+                      </div>
+
+                      {/* BEP Progress Bar */}
+                      <div className="space-y-1 pt-1">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span>Volume Order: {simOrdersPerDay} order</span>
+                          <span>Titik Impas: {dailyBepOrders} order/hari</span>
+                        </div>
+                        <div className="w-full h-2.5 bg-white/80 rounded-full overflow-hidden p-0.5 border border-stone-200">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              isAboveBep ? 'bg-emerald-600' : 'bg-rose-600'
+                            }`}
+                            style={{ width: `${Math.min(100, (simOrdersPerDay / (dailyBepOrders * 1.5)) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Actionable Decision Advice */}
+                      <div className="pt-2 border-t border-current/10 text-xs leading-relaxed">
+                        <b>Rekomendasi Keputusan Eksekutif:</b>{' '}
+                        {isAboveBep ? (
+                          <span>
+                            Volume <b>{simOrdersPerDay} order/hari</b> sudah berada di atas BEP ({dailyBepOrders} order). <b>Aman untuk ekspansi rute baru</b>. Alokasikan surplus laba bersih ({formatRupiah(simNetProfit)}/bln) untuk dividen dan kas cadangan.
+                          </span>
+                        ) : (
+                          <span>
+                            <b>Tunda pengaktifan rute!</b> Pada volume {simOrdersPerDay} order/hari, rute ini akan tekor {formatRupiah(Math.abs(monthlyProfitPerCluster))}/bln per komplek. Solusi: Tetapkan syarat minimal 25 KK sebelum meluncurkan armada.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick Summary Pill Output */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-3 bg-white rounded-xl border border-stone-200">
+                        <span className="text-[10px] text-stone-400 uppercase font-mono block">Omzet (GMV)</span>
+                        <span className="font-black text-stone-900 font-mono text-sm block">
+                          {formatRupiah(simGmv)}
+                        </span>
+                      </div>
+                      <div className="p-3 bg-white rounded-xl border border-stone-200">
+                        <span className="text-[10px] text-stone-400 uppercase font-mono block">Laba Bersih Total</span>
+                        <span className={`font-black font-mono text-sm block ${simNetProfit > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                          {formatRupiah(simNetProfit)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* OPSI 3: MATRIKS ANALISIS SENSITIVITAS 3 KOLOM BERDAMPINGAN               */}
+            {/* ========================================================================= */}
+            {simulatorOption === 'OPTION_3' && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-sky-100 text-sky-800 flex items-center justify-center font-bold text-xs">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-stone-900">
+                        Opsi 3: Matriks Analisis Sensitivitas 3 Kolom Berdampingan
+                      </h4>
+                      <p className="text-[11px] text-stone-500">
+                        Tinjau langsung 3 skenario secara komparatif tanpa perlu bolak-balik mengubah slider:
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-stone-600 bg-stone-200 px-2.5 py-1 rounded-full font-bold">
+                    Tabel Evaluasi Head-to-Head
+                  </span>
+                </div>
+
+                {/* Side-by-Side 3-Column Comparative Matrix */}
+                <div className="bg-white rounded-2xl border border-stone-200 overflow-x-auto shadow-2xs">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-stone-200 bg-stone-50/80">
+                        <th className="p-3.5 text-stone-600 font-black uppercase text-[11px] w-1/4">
+                          Komponen Evaluasi & Finansial
+                        </th>
+                        <th className="p-3.5 text-stone-900 font-black text-[12px] w-1/4 bg-stone-100/60 border-l border-stone-200">
+                          <span className="text-[10px] text-stone-400 block font-mono font-normal">KONDISI RIIL</span>
+                          1. Status Quo (2 Komplek)
+                        </th>
+                        <th className="p-3.5 text-purple-900 font-black text-[12px] w-1/4 bg-purple-50/70 border-l border-purple-200">
+                          <span className="text-[10px] text-purple-600 block font-mono font-normal">RENCANA DEKAT</span>
+                          2. Buka Buah Batu (3 Komplek)
+                        </th>
+                        <th className="p-3.5 text-amber-900 font-black text-[12px] w-1/4 bg-amber-50/70 border-l border-amber-200">
+                          <span className="text-[10px] text-amber-700 block font-mono font-normal">TARGET KUARTAL I</span>
+                          3. Skala 4 Komplek + Bundling
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100 text-stone-700">
+                      <tr>
+                        <td className="p-3 font-bold text-stone-900">Cakupan Komplek & Rute</td>
+                        <td className="p-3 bg-stone-50/30 border-l border-stone-200">Antapani & Arcamanik</td>
+                        <td className="p-3 bg-purple-50/20 border-l border-purple-200 font-bold text-purple-900">
+                          + Buah Batu Regency (3 Komplek)
+                        </td>
+                        <td className="p-3 bg-amber-50/20 border-l border-amber-200 font-bold text-amber-900">
+                          + Singgasana Pradana (4 Komplek)
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3 font-bold text-stone-900">Target Order Harian</td>
+                        <td className="p-3 font-mono bg-stone-50/30 border-l border-stone-200">15 order / komplek (30 total)</td>
+                        <td className="p-3 font-mono bg-purple-50/20 border-l border-purple-200 font-bold text-purple-800">20 order / komplek (60 total)</td>
+                        <td className="p-3 font-mono bg-amber-50/20 border-l border-amber-200 font-bold text-amber-800">25 order / komplek (100 total)</td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3 font-bold text-stone-900">Rata-rata Keranjang (AOV)</td>
+                        <td className="p-3 font-mono bg-stone-50/30 border-l border-stone-200">Rp 50.700</td>
+                        <td className="p-3 font-mono bg-purple-50/20 border-l border-purple-200">Rp 50.700</td>
+                        <td className="p-3 font-mono bg-amber-50/20 border-l border-amber-200 font-bold text-amber-800">Rp 65.000 (Paket Kombo)</td>
+                      </tr>
+
+                      <tr className="font-bold bg-stone-50/40">
+                        <td className="p-3 text-stone-900">Proyeksi Omzet Bulanan (GMV)</td>
+                        <td className="p-3 font-mono text-stone-900 border-l border-stone-200">Rp 39.546.000</td>
+                        <td className="p-3 font-mono text-purple-900 border-l border-purple-200">Rp 79.092.000</td>
+                        <td className="p-3 font-mono text-amber-900 border-l border-amber-200">Rp 169.000.000</td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3">HPP Belanja Petani (71.5%)</td>
+                        <td className="p-3 font-mono text-rose-600 border-l border-stone-200">(Rp 28.250.000)</td>
+                        <td className="p-3 font-mono text-rose-600 border-l border-purple-200">(Rp 56.550.000)</td>
+                        <td className="p-3 font-mono text-rose-600 border-l border-amber-200">(Rp 120.835.000)</td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3">Beban Logistik (Rp 100k/hari)</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-stone-200">Rp 5.200.000 (2 rute)</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-purple-200">Rp 7.800.000 (3 rute)</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-amber-200">Rp 10.400.000 (4 rute)</td>
+                      </tr>
+
+                      <tr className="bg-emerald-50/50 font-black text-emerald-950">
+                        <td className="p-3 text-emerald-900">LABA BERSIH OPERASIONAL</td>
+                        <td className="p-3 font-mono text-emerald-800 border-l border-stone-200 text-sm">Rp 3.460.500</td>
+                        <td className="p-3 font-mono text-emerald-700 border-l border-purple-200 text-sm font-black">
+                          Rp 9.521.100 (+175%)
+                        </td>
+                        <td className="p-3 font-mono text-emerald-700 border-l border-amber-200 text-sm font-black">
+                          Rp 26.611.000 (+669%)
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3 font-bold text-stone-900">Net Profit Margin</td>
+                        <td className="p-3 font-mono border-l border-stone-200 font-bold">8.7%</td>
+                        <td className="p-3 font-mono border-l border-purple-200 font-bold text-purple-700">12.0%</td>
+                        <td className="p-3 font-mono border-l border-amber-200 font-bold text-amber-700">15.7%</td>
+                      </tr>
+
+                      {/* Operational Feasibility Checklist */}
+                      <tr className="bg-stone-50/60 font-bold text-stone-800">
+                        <td colSpan={4} className="p-2.5 uppercase tracking-wider text-[10px] text-stone-500 font-mono">
+                          Checklist Kesiapan Operasional Lapangan:
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3 text-stone-600">Kesiapan Mitra Rumah-Gudang IRT</td>
+                        <td className="p-3 border-l border-stone-200 text-emerald-700 font-bold">✅ Siap (2 Mitra Aktif)</td>
+                        <td className="p-3 border-l border-purple-200 text-emerald-700 font-bold">✅ Siap (Bu Nurul Terverifikasi)</td>
+                        <td className="p-3 border-l border-amber-200 text-amber-700 font-bold">⚠️ Perlu Rekrut 2 Mitra Baru</td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3 text-stone-600">Kapasitas Muatan Mobil Pick-up</td>
+                        <td className="p-3 border-l border-stone-200 text-emerald-700">✅ 30 box (Kapasitas 30%)</td>
+                        <td className="p-3 border-l border-purple-200 text-emerald-700">✅ 60 box (Kapasitas 60%)</td>
+                        <td className="p-3 border-l border-amber-200 text-amber-700 font-bold">⚠️ 100 box (Perlu 1 Mobil Tambahan)</td>
+                      </tr>
+
+                      {/* Management Conclusion Row */}
+                      <tr className="bg-stone-100/70">
+                        <td className="p-3 font-black text-stone-900">Rekomendasi Keputusan</td>
+                        <td className="p-3 border-l border-stone-200 text-[11px] leading-tight">
+                          <b>Pertahankan stabilitas</b> & fokus pada repeat order warga eksisting.
+                        </td>
+                        <td className="p-3 border-l border-purple-200 text-[11px] leading-tight font-bold text-purple-950 bg-purple-50/50">
+                          <b>SEGERA EKSEKUSI</b> begitu kuota 30 KK waitlist tercapai. Efisiensi margin tertinggi.
+                        </td>
+                        <td className="p-3 border-l border-amber-200 text-[11px] leading-tight text-amber-950 bg-amber-50/50">
+                          <b>Rencana Kuartal I</b> setelah dividen dan cadangan modal armada mencukupi.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
