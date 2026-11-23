@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   LineChart,
   MapPin,
+  Boxes,
   ExternalLink,
   ShieldCheck,
   Clock,
@@ -35,6 +36,12 @@ export function AdminHeader() {
       label: 'Katalog & Tambah Produk',
       icon: Package,
       badge: 'Master',
+    },
+    {
+      href: '/admin/pasokan',
+      label: 'Pasokan & Petani Hulu',
+      icon: Boxes,
+      badge: 'Subuh',
     },
     {
       href: '/admin/pesanan',
