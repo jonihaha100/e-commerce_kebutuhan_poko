@@ -9,6 +9,7 @@ import {
   LineChart,
   MapPin,
   Boxes,
+  FileSpreadsheet,
   ExternalLink,
   ShieldCheck,
   Clock,
@@ -60,6 +61,12 @@ export function AdminHeader() {
       label: 'Radar Harga Caringin',
       icon: LineChart,
       badge: '15.00 WIB',
+    },
+    {
+      href: '/admin/laporan',
+      label: 'Laporan & Tutup Buku',
+      icon: FileSpreadsheet,
+      badge: 'Bulan',
     },
   ];
 
