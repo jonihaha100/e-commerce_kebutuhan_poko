@@ -134,6 +134,8 @@ function LoginContent() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState<string | null>(null);
 
+  const [infoToast, setInfoToast] = useState<string | null>(null);
+
   const currentCh = CHAPTERS_USER[activeChapter] || CHAPTERS_USER[0];
 
   const handleNextChapter = () => {
@@ -389,6 +391,12 @@ function LoginContent() {
               </button>
             </div>
 
+            {infoToast && (
+              <div className="p-3 bg-sky-50 border border-sky-200 text-sky-900 rounded-xl text-xs font-semibold animate-in fade-in">
+                {infoToast}
+              </div>
+            )}
+
             {userTab === 'LOGIN' && (
               <form onSubmit={handleUserFormLogin} className="space-y-3.5">
                 <div>
@@ -444,7 +452,10 @@ function LoginContent() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => alert('Fitur reset kata sandi via WhatsApp: Kode verifikasi akan dikirim ke nomor Anda.')}
+                    onClick={() => {
+                      setInfoToast('Fitur reset kata sandi via WhatsApp: Kode verifikasi akan dikirim ke nomor Anda.');
+                      setTimeout(() => setInfoToast(null), 4000);
+                    }}
                     className="text-xs text-[#4C9BD5] font-semibold hover:underline cursor-pointer"
                   >
                     Lupa kata sandi?

@@ -97,7 +97,8 @@ export default function AdminProdukPage() {
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim() || !formSku.trim()) {
-      alert('Mohon isi nama komoditas dan kode SKU!');
+      setFeedbackMsg('⚠️ Mohon isi nama komoditas dan kode SKU!');
+      setTimeout(() => setFeedbackMsg(null), 3000);
       return;
     }
 
