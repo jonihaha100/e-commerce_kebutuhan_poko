@@ -31,6 +31,8 @@ import {
   Truck,
 } from 'lucide-react';
 
+import { PromoBannerSlider } from '@/components/PromoBannerSlider';
+
 // Pricing options derived directly from the real Berkah Tani Sejahtera catalog (PDF Mei 2024)
 interface PortionOption {
   label: string;
@@ -229,7 +231,15 @@ export default function StorefrontHomePage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 pb-28">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 sm:space-y-8 pb-28">
+      {/* 1. TOKOPEDIA-STYLE SLIDING PROMO HERO BANNER */}
+      <PromoBannerSlider
+        onOpenTour={() => {
+          setTourStep(0);
+          setShowTour(true);
+        }}
+      />
+
       {/* DUAL-GRID HERO BANNER: Balanced 60:40 Layout (No Empty Void) */}
       <section className="bg-gradient-to-r from-[#4C9BD5] via-[#2BAE66] to-[#24B05A] text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
