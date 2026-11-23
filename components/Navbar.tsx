@@ -259,6 +259,16 @@ export function Navbar({ onOpenCart }: { onOpenCart: () => void }) {
                   <p className="text-[11px] text-slate-500 font-mono">{currentUser.role}</p>
                 </div>
                 <div className="py-1">
+                  {currentUser.role === 'ADMIN' && (
+                    <Link
+                      href="/admin/produk"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 font-bold border-b border-indigo-100"
+                    >
+                      <Shield className="w-4 h-4 text-indigo-600" />
+                      <span>Buka Command Center Admin</span>
+                    </Link>
+                  )}
                   <Link
                     href="/akun"
                     onClick={() => setIsUserMenuOpen(false)}

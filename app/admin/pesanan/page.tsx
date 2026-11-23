@@ -151,6 +151,22 @@ export default function AdminPesananPage() {
     document.body.removeChild(link);
   };
 
+  const formatOrderDate = (dateStr?: string) => {
+    if (!dateStr) return '22 Nov • 17:30 WIB';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const day = d.getDate();
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const month = months[d.getMonth()];
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      return `${day} ${month} • ${hours}:${mins} WIB`;
+    } catch {
+      return dateStr;
+    }
+  };
+
   // Format WhatsApp Number
   const getWhatsAppLink = (
     phone?: string,
@@ -405,7 +421,7 @@ export default function AdminPesananPage() {
                           {o.order_number}
                         </span>
                         <span className="text-[11px] text-stone-500 font-medium block">
-                          {o.created_at || '17:30 WIB • 22 Nov'}
+                          {formatOrderDate(o.created_at)}
                         </span>
                         <span className="inline-block mt-0.5 text-[9px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 font-semibold">
                           Slot: {o.delivery_slot || '06:00 - 09:00 Pagi'}
@@ -529,7 +545,7 @@ export default function AdminPesananPage() {
                     </span>
                   </div>
                   <span className="text-[11px] text-stone-500 font-medium">
-                    Transaksi: {selectedOrderDetail.created_at || '17:30 WIB • 22 Nov'}
+                    Transaksi: {formatOrderDate(selectedOrderDetail.created_at)}
                   </span>
                 </div>
               </div>

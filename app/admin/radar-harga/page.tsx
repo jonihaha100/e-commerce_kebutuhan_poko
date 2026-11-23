@@ -39,21 +39,24 @@ import {
   Info,
 } from 'lucide-react';
 import { AdminHeader } from '@/components/AdminHeader';
+import { useApp } from '@/context/AppContext';
 
 export default function RadarHargaAdminPage() {
-  const [products] = useState<Product[]>(initialProducts);
-  const [selectedProductId, setSelectedProductId] = useState<string>(initialProducts[0].id);
+  const { products, catalogPrices, updateCatalogPrice } = useApp();
+  const [selectedProductId, setSelectedProductId] = useState<string>(
+    products[0]?.id || initialProducts[0].id
+  );
   const [alerts, setAlerts] = useState(initialAiAlerts);
 
-  // Active Catalog Prices in State
-  const [catalogPrices, setCatalogPrices] = useState(initialCatalogPrices);
-
   // Selected Product & its related data
-  const currentProduct = products.find((p) => p.id === selectedProductId) || products[0];
+  const currentProduct =
+    products.find((p) => p.id === selectedProductId) || products[0] || initialProducts[0];
   const currentPriceEntry = catalogPrices.find((cp) => cp.product_id === currentProduct.id);
 
   // Form edit price state
-  const [customSellPrice, setCustomSellPrice] = useState(currentPriceEntry?.sell_price_idr || 18000);
+  const [customSellPrice, setCustomSellPrice] = useState(
+    currentPriceEntry?.sell_price_idr || 18000
+  );
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [circuitBreakerError, setCircuitBreakerError] = useState<string | null>(null);
 
@@ -108,22 +111,7 @@ export default function RadarHargaAdminPage() {
     const failoverResult = calculateFailoverSellPrice(net3P, packCost, 1500, currentPriceEntry?.sell_price_idr);
 
     setCustomSellPrice(failoverResult.sellPrice);
-
-    // Update state with 3P badge
-    setCatalogPrices((prev) =>
-      prev.map((cp) =>
-        cp.product_id === currentProduct.id
-          ? {
-              ...cp,
-              sell_price_idr: failoverResult.sellPrice,
-              min_safe_price_idr: failoverResult.minSafePrice,
-              is_failover_3p: true,
-              farmer_split_idr: net3P,
-              ops_split_idr: failoverResult.sellPrice - net3P,
-            }
-          : cp
-      )
-    );
+    updateCatalogPrice(currentProduct.id, failoverResult.sellPrice, net3P);
   };
 
   // Trigger Gemini Flash AI Insight
@@ -161,22 +149,11 @@ export default function RadarHargaAdminPage() {
 
     setCircuitBreakerError(null);
 
-    // Update catalog price
-    const split = calculateOpenBookSplit(Math.round(latestBenchmarkPrice * 0.68), customSellPrice);
-
-    setCatalogPrices((prev) =>
-      prev.map((cp) =>
-        cp.product_id === currentProduct.id
-          ? {
-              ...cp,
-              sell_price_idr: customSellPrice,
-              min_safe_price_idr: currentMinSafe,
-              farmer_split_idr: split.displayFarmer,
-              ops_split_idr: split.displayOps,
-              published_at: new Date().toISOString(),
-            }
-          : cp
-      )
+    // Sync to AppContext and storefront
+    updateCatalogPrice(
+      currentProduct.id,
+      customSellPrice,
+      Math.round(latestBenchmarkPrice * 0.68)
     );
 
     setPublishSuccess(true);

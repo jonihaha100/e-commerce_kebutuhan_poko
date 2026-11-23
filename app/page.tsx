@@ -42,60 +42,80 @@ interface PortionOption {
 
 const CATALOG_PORTIONS: Record<string, PortionOption[]> = {
   // Pakcoy Hidroponik
-  p1: [
-    { label: '1 Ikat', price: 8000, farmerSplit: 5500, opsSplit: 2500, marketBenchmark: 10000 },
+  'PKC-01': [
+    { label: 'pack (250gr)', price: 7600, farmerSplit: 5500, opsSplit: 2100, marketBenchmark: 9000 },
     { label: '500 gr', price: 14000, farmerSplit: 9500, opsSplit: 4500, marketBenchmark: 16000 },
     { label: '1 kg', price: 23000, farmerSplit: 16000, opsSplit: 7000, marketBenchmark: 27000 },
   ],
   // Ubi Cilembu Madu (14d Cured)
-  p2: [
+  'UBI-CLM-01': [
     { label: '500 gr', price: 9000, farmerSplit: 6000, opsSplit: 3000, marketBenchmark: 11000 },
     { label: '1 kg', price: 17500, farmerSplit: 12000, opsSplit: 5500, marketBenchmark: 20000 },
   ],
   // Ayam Filet Dada (Tanpa Tulang)
-  p3: [
-    { label: '250 gr', price: 18500, farmerSplit: 13000, opsSplit: 5500, marketBenchmark: 22000 },
-    { label: '500 gr', price: 35000, farmerSplit: 24500, opsSplit: 10500, marketBenchmark: 40000 },
-    { label: '1 kg', price: 65000, farmerSplit: 46000, opsSplit: 19000, marketBenchmark: 75000 },
+  'AYM-FLT-01': [
+    { label: '250 gr', price: 16500, farmerSplit: 12500, opsSplit: 4000, marketBenchmark: 20000 },
+    { label: '500 gr', price: 31000, farmerSplit: 24000, opsSplit: 7000, marketBenchmark: 36000 },
+    { label: '1 kg', price: 60000, farmerSplit: 47000, opsSplit: 13000, marketBenchmark: 70000 },
+  ],
+  // Telur Ayam Negeri Fresh
+  'TLR-AYM-01': [
+    { label: '1/2 kg (8 butir)', price: 15000, farmerSplit: 11000, opsSplit: 4000, marketBenchmark: 17000 },
+    { label: '1 kg (16 butir)', price: 28500, farmerSplit: 21500, opsSplit: 7000, marketBenchmark: 32000 },
+  ],
+  // Sosin Manis Segar
+  'SSN-01': [
+    { label: 'ikat (250gr)', price: 5000, farmerSplit: 3600, opsSplit: 1400, marketBenchmark: 6500 },
+    { label: '500 gr', price: 9500, farmerSplit: 7000, opsSplit: 2500, marketBenchmark: 12000 },
+  ],
+  // Kangkung Akar Lembang
+  'KKG-LMB-01': [
+    { label: 'ikat (300gr)', price: 5000, farmerSplit: 3600, opsSplit: 1400, marketBenchmark: 6500 },
+    { label: '2 ikat (600gr)', price: 9000, farmerSplit: 6800, opsSplit: 2200, marketBenchmark: 11500 },
+  ],
+  // Cabai Rawit Merah
+  'CBI-RWT-3P': [
+    { label: 'pack (200gr)', price: 9000, farmerSplit: 6500, opsSplit: 2500, marketBenchmark: 11000 },
+    { label: '500 gr', price: 21000, farmerSplit: 15500, opsSplit: 5500, marketBenchmark: 25000 },
   ],
   // Bawang Merah Brebes
-  p4: [
-    { label: '250 gr', price: 25500, farmerSplit: 18000, opsSplit: 7500, marketBenchmark: 29000 },
-    { label: '500 gr', price: 47500, farmerSplit: 33500, opsSplit: 14000, marketBenchmark: 54000 },
-    { label: '1 kg', price: 92500, farmerSplit: 65000, opsSplit: 27500, marketBenchmark: 105000 },
+  'BWG-MRH-3P': [
+    { label: '250 gr', price: 9500, farmerSplit: 7000, opsSplit: 2500, marketBenchmark: 12000 },
+    { label: '500 gr', price: 18000, farmerSplit: 13500, opsSplit: 4500, marketBenchmark: 22000 },
   ],
-  // Cabe Rawit Merah
-  p5: [
-    { label: '250 gr', price: 12000, farmerSplit: 8500, opsSplit: 3500, marketBenchmark: 14000 },
-    { label: '500 gr', price: 24000, farmerSplit: 17000, opsSplit: 7000, marketBenchmark: 28000 },
-    { label: '1 kg', price: 45000, farmerSplit: 32000, opsSplit: 13000, marketBenchmark: 52000 },
+  // Beras Pandan Wangi
+  'BRS-PW-05': [
+    { label: 'karung 5kg', price: 78000, farmerSplit: 60000, opsSplit: 18000, marketBenchmark: 85000 },
   ],
-  // Bawang Putih
-  p6: [
-    { label: '250 gr', price: 15000, farmerSplit: 10500, opsSplit: 4500, marketBenchmark: 17000 },
-    { label: '500 gr', price: 28000, farmerSplit: 19500, opsSplit: 8500, marketBenchmark: 32000 },
-    { label: '1 kg', price: 55500, farmerSplit: 39000, opsSplit: 16500, marketBenchmark: 63000 },
-  ],
-  // Telur Ayam Negeri
-  p7: [
-    { label: '500 gr', price: 15000, farmerSplit: 11000, opsSplit: 4000, marketBenchmark: 17000 },
-    { label: '1 kg', price: 29000, farmerSplit: 21500, opsSplit: 7500, marketBenchmark: 32000 },
-  ],
-  // Sosin Hijau
-  p8: [
-    { label: '1 Ikat', price: 8000, farmerSplit: 5500, opsSplit: 2500, marketBenchmark: 10000 },
-    { label: '500 gr', price: 14000, farmerSplit: 9500, opsSplit: 4500, marketBenchmark: 16000 },
-  ],
-  // Tahu Segar Tradisional
-  p9: [
-    { label: '1 Bungkus', price: 13500, farmerSplit: 9500, opsSplit: 4000, marketBenchmark: 15000 },
-  ],
-  // Beras Pandanwangi
-  p10: [
-    { label: '1 kg', price: 17500, farmerSplit: 12500, opsSplit: 5000, marketBenchmark: 19500 },
-    { label: '5 kg', price: 85000, farmerSplit: 61000, opsSplit: 24000, marketBenchmark: 95000 },
+  // Minyak Goreng Sawit
+  'MYK-GRG-2L': [
+    { label: 'pouch 2L', price: 34000, farmerSplit: 28000, opsSplit: 6000, marketBenchmark: 38000 },
   ],
 };
+
+function getProductIcon(product: Product): string {
+  const name = product.name.toLowerCase();
+  if (name.includes('pakcoy')) return '🥬';
+  if (name.includes('sosin') || name.includes('sawi')) return '🥗';
+  if (name.includes('ubi') || name.includes('cilembu')) return '🍠';
+  if (name.includes('ayam') || name.includes('dada')) return '🍗';
+  if (name.includes('telur')) return '🥚';
+  if (name.includes('cabai') || name.includes('cabe')) return '🌶️';
+  if (name.includes('bawang')) return '🧅';
+  if (name.includes('beras')) return '🍚';
+  if (name.includes('minyak')) return '🛢️';
+  if (name.includes('kangkung') || name.includes('bayam')) return '🌱';
+  if (name.includes('tahu') || name.includes('tempe')) return '🧈';
+  if (name.includes('wortel')) return '🥕';
+  if (name.includes('tomat')) return '🍅';
+  if (name.includes('kentang')) return '🥔';
+
+  if (product.category_type === 'PROTEIN_1P') return '🍗';
+  if (product.category_type === 'TUBER_CURED_1P') return '🍠';
+  if (product.category_type === 'SPICE_3P') return '🌶️';
+  if (product.category_type === 'STAPLE_3P') return '🌾';
+  return '🥬';
+}
 
 export default function StorefrontHomePage() {
   const router = useRouter();
@@ -140,10 +160,11 @@ export default function StorefrontHomePage() {
 
   const categories = [
     { id: 'ALL', label: 'Semua Produk', icon: '🧺' },
-    { id: 'LEAFY_1P', label: 'Sayur Daun (1P)', icon: '🥬' },
+    { id: 'VEGETABLE_1P', label: 'Sayur Daun (1P)', icon: '🥬' },
     { id: 'TUBER_CURED_1P', label: 'Umbi Cilembu (1P)', icon: '🍠' },
-    { id: 'POULTRY_1P', label: 'Ayam & Protein (1P)', icon: '🍗' },
-    { id: 'CHILI_3P', label: 'Cabai & Bawang (3P)', icon: '🌶️' },
+    { id: 'PROTEIN_1P', label: 'Ayam & Telur (1P)', icon: '🍗' },
+    { id: 'SPICE_3P', label: 'Bumbu & Cabai (3P)', icon: '🌶️' },
+    { id: 'STAPLE_3P', label: 'Sembako Pokok (3P)', icon: '🌾' },
   ];
 
   // Active products master from AppContext
@@ -401,7 +422,7 @@ export default function StorefrontHomePage() {
           {filteredProducts.map((product) => {
             const catalogPriceEntry = catalogPrices.find((cp) => cp.product_id === product.id);
             const dynamicBasePrice = catalogPriceEntry?.sell_price_idr || 15000;
-            const portionList = CATALOG_PORTIONS[product.id] || [
+            const portionList = CATALOG_PORTIONS[product.sku] || CATALOG_PORTIONS[product.id] || [
               {
                 label: product.unit,
                 price: dynamicBasePrice,
@@ -454,16 +475,7 @@ export default function StorefrontHomePage() {
 
                   {/* Visual Badge Icon */}
                   <div className="w-full h-20 sm:h-24 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-3xl group-hover:scale-103 transition-transform">
-                    {product.name.includes('Pakcoy') && '🥬'}
-                    {product.name.includes('Sosin') && '🥗'}
-                    {product.name.includes('Ubi') && '🍠'}
-                    {product.name.includes('Ayam') && '🍗'}
-                    {product.name.includes('Telur') && '🥚'}
-                    {product.name.includes('Cabai') && '🌶️'}
-                    {product.name.includes('Bawang') && '🧅'}
-                    {product.name.includes('Beras') && '🍚'}
-                    {product.name.includes('Minyak') && '🛢️'}
-                    {product.name.includes('Tahu') && '🧈'}
+                    {getProductIcon(product)}
                   </div>
 
                   <div>
