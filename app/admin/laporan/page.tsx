@@ -276,8 +276,8 @@ export default function AdminLaporanPage() {
             <th class='num'>Laba Bersih</th>
           </tr>
           ${clusterBreakdowns
-            .map(
-              (c) => `
+        .map(
+          (c) => `
             <tr>
               <td><b>${c.name}</b> (${c.status})</td>
               <td class='num'>${c.totalOrders}</td>
@@ -286,8 +286,8 @@ export default function AdminLaporanPage() {
               <td class='num'>${formatRupiah(c.logisticsCost)}</td>
               <td class='num bold green'>${formatRupiah(c.netProfit)}</td>
             </tr>`
-            )
-            .join('')}
+        )
+        .join('')}
         </table>
 
         <h2>III. KEPUTUSAN STRATEGIS & KESIMPULAN AUDIT EKSEKUTIF</h2>
@@ -554,11 +554,10 @@ export default function AdminLaporanPage() {
             <div className="text-left md:text-right">
               <span className="text-[10px] text-stone-400 font-mono block">Status Buku:</span>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                  isBookClosed
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    : 'bg-amber-100 text-amber-900 border border-amber-300'
-                }`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${isBookClosed
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : 'bg-amber-100 text-amber-900 border border-amber-300'
+                  }`}
               >
                 {isBookClosed ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                 <span>{isBookClosed ? 'Tutup Buku Selesai' : 'Periode Terbuka'}</span>
@@ -680,55 +679,50 @@ export default function AdminLaporanPage() {
               <button
                 type="button"
                 onClick={() => setDecisionCategory('ALL')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  decisionCategory === 'ALL'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${decisionCategory === 'ALL'
+                  ? 'bg-white text-stone-900 shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+                  }`}
               >
                 Semua Bidang (4)
               </button>
               <button
                 type="button"
                 onClick={() => setDecisionCategory('SUPPLY')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  decisionCategory === 'SUPPLY'
-                    ? 'bg-purple-700 text-white shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${decisionCategory === 'SUPPLY'
+                  ? 'bg-purple-700 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+                  }`}
               >
                 🌾 Pasokan Petani
               </button>
               <button
                 type="button"
                 onClick={() => setDecisionCategory('CLUSTER')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  decisionCategory === 'CLUSTER'
-                    ? 'bg-purple-700 text-white shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${decisionCategory === 'CLUSTER'
+                  ? 'bg-purple-700 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+                  }`}
               >
                 🏘️ Rute Klaster
               </button>
               <button
                 type="button"
                 onClick={() => setDecisionCategory('LOGISTICS')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  decisionCategory === 'LOGISTICS'
-                    ? 'bg-purple-700 text-white shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${decisionCategory === 'LOGISTICS'
+                  ? 'bg-purple-700 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+                  }`}
               >
                 🚚 Kurir Rp70k
               </button>
               <button
                 type="button"
                 onClick={() => setDecisionCategory('INTEGRITY')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  decisionCategory === 'INTEGRITY'
-                    ? 'bg-purple-700 text-white shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${decisionCategory === 'INTEGRITY'
+                  ? 'bg-purple-700 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+                  }`}
               >
                 🔒 Audit Tutup Buku
               </button>
@@ -937,11 +931,10 @@ export default function AdminLaporanPage() {
                 <button
                   type="button"
                   onClick={() => setSimulatorOption('OPTION_1')}
-                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
-                    simulatorOption === 'OPTION_1'
-                      ? 'bg-purple-700 text-white shadow-xs'
-                      : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
-                  }`}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${simulatorOption === 'OPTION_1'
+                    ? 'bg-purple-700 text-white shadow-xs'
+                    : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
+                    }`}
                 >
                   <Target className="w-3.5 h-3.5" />
                   <span>Opsi 1: Skenario Strategis</span>
@@ -953,11 +946,10 @@ export default function AdminLaporanPage() {
                 <button
                   type="button"
                   onClick={() => setSimulatorOption('OPTION_2')}
-                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
-                    simulatorOption === 'OPTION_2'
-                      ? 'bg-purple-700 text-white shadow-xs'
-                      : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
-                  }`}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${simulatorOption === 'OPTION_2'
+                    ? 'bg-purple-700 text-white shadow-xs'
+                    : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
+                    }`}
                 >
                   <Gauge className="w-3.5 h-3.5" />
                   <span>Opsi 2: Kalkulator BEP</span>
@@ -966,11 +958,10 @@ export default function AdminLaporanPage() {
                 <button
                   type="button"
                   onClick={() => setSimulatorOption('OPTION_3')}
-                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
-                    simulatorOption === 'OPTION_3'
-                      ? 'bg-purple-700 text-white shadow-xs'
-                      : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
-                  }`}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${simulatorOption === 'OPTION_3'
+                    ? 'bg-purple-700 text-white shadow-xs'
+                    : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
+                    }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
                   <span>Opsi 3: Matriks Berdampingan</span>
@@ -1007,11 +998,10 @@ export default function AdminLaporanPage() {
                   {/* Scenario A: Status Quo */}
                   <div
                     onClick={() => applyScenarioPreset('STATUS_QUO')}
-                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
-                      activeScenarioId === 'STATUS_QUO'
-                        ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
-                        : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
-                    }`}
+                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${activeScenarioId === 'STATUS_QUO'
+                      ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
+                      : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider font-mono">
@@ -1048,11 +1038,10 @@ export default function AdminLaporanPage() {
                   {/* Scenario B: Ekspansi 2 Kurir */}
                   <div
                     onClick={() => applyScenarioPreset('BUAH_BATU')}
-                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
-                      activeScenarioId === 'BUAH_BATU'
-                        ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
-                        : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
-                    }`}
+                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${activeScenarioId === 'BUAH_BATU'
+                      ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
+                      : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider font-mono">
@@ -1089,11 +1078,10 @@ export default function AdminLaporanPage() {
                   {/* Scenario C: Scale-up 3 Kurir */}
                   <div
                     onClick={() => applyScenarioPreset('SCALE_UP')}
-                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
-                      activeScenarioId === 'SCALE_UP'
-                        ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
-                        : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
-                    }`}
+                    className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${activeScenarioId === 'SCALE_UP'
+                      ? 'border-purple-600 bg-white shadow-sm ring-2 ring-purple-100'
+                      : 'border-stone-200 bg-white/70 hover:border-purple-300 hover:bg-white'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider font-mono">
@@ -1154,13 +1142,12 @@ export default function AdminLaporanPage() {
                       </div>
                       <div className="w-24 h-2.5 bg-stone-100 rounded-full overflow-hidden p-0.5 border border-stone-200">
                         <div
-                          className={`h-full rounded-full transition-all ${
-                            activeScenarioId === 'STATUS_QUO'
-                              ? 'w-1/3 bg-emerald-500'
-                              : activeScenarioId === 'BUAH_BATU'
+                          className={`h-full rounded-full transition-all ${activeScenarioId === 'STATUS_QUO'
+                            ? 'w-1/3 bg-emerald-500'
+                            : activeScenarioId === 'BUAH_BATU'
                               ? 'w-2/3 bg-purple-600'
                               : 'w-full bg-amber-500'
-                          }`}
+                            }`}
                         />
                       </div>
                     </div>
@@ -1293,11 +1280,10 @@ export default function AdminLaporanPage() {
                             key={num}
                             type="button"
                             onClick={() => setSimClusters(num)}
-                            className={`py-2 text-xs font-black rounded-xl border transition cursor-pointer ${
-                              simClusters === num
-                                ? 'bg-purple-700 border-purple-700 text-white shadow-xs'
-                                : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
-                            }`}
+                            className={`py-2 text-xs font-black rounded-xl border transition cursor-pointer ${simClusters === num
+                              ? 'bg-purple-700 border-purple-700 text-white shadow-xs'
+                              : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                              }`}
                           >
                             {num} Komplek
                           </button>
@@ -1395,22 +1381,20 @@ export default function AdminLaporanPage() {
                   <div className="lg:col-span-5 space-y-4">
                     {/* Live Health State Card */}
                     <div
-                      className={`p-5 rounded-2xl border-2 transition-all space-y-3 shadow-2xs ${
-                        isAboveBep
-                          ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
-                          : 'bg-rose-50/80 border-rose-300 text-rose-950'
-                      }`}
+                      className={`p-5 rounded-2xl border-2 transition-all space-y-3 shadow-2xs ${isAboveBep
+                        ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
+                        : 'bg-rose-50/80 border-rose-300 text-rose-950'
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-wider font-mono">
                           Status Evaluasi Rute Kurir
                         </span>
                         <span
-                          className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                            isAboveBep
-                              ? 'bg-emerald-200 text-emerald-900 border border-emerald-400'
-                              : 'bg-rose-200 text-rose-900 border border-rose-400'
-                          }`}
+                          className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${isAboveBep
+                            ? 'bg-emerald-200 text-emerald-900 border border-emerald-400'
+                            : 'bg-rose-200 text-rose-900 border border-rose-400'
+                            }`}
                         >
                           {isAboveBep ? '🟢 SURPLUS (PROFIT)' : '🔴 DEFISIT (BELUM BEP)'}
                         </span>
@@ -1437,9 +1421,8 @@ export default function AdminLaporanPage() {
                         </div>
                         <div className="w-full h-2.5 bg-white/80 rounded-full overflow-hidden p-0.5 border border-stone-200">
                           <div
-                            className={`h-full rounded-full transition-all ${
-                              isAboveBep ? 'bg-emerald-600' : 'bg-rose-600'
-                            }`}
+                            className={`h-full rounded-full transition-all ${isAboveBep ? 'bg-emerald-600' : 'bg-rose-600'
+                              }`}
                             style={{ width: `${Math.min(100, (dailyOrdersPerCourier / (dailyBepOrders * 1.5)) * 100)}%` }}
                           />
                         </div>
@@ -1839,11 +1822,10 @@ export default function AdminLaporanPage() {
                     <td className="py-3 px-4 font-bold text-stone-900">
                       {c.name}
                       <span
-                        className={`ml-2 text-[9px] px-2 py-0.2 rounded-full font-bold ${
-                          c.status === 'ACTIVE'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
+                        className={`ml-2 text-[9px] px-2 py-0.2 rounded-full font-bold ${c.status === 'ACTIVE'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-amber-100 text-amber-800'
+                          }`}
                       >
                         {c.status === 'ACTIVE' ? 'Aktif Terlayani' : 'Waitlist Rute'}
                       </span>
