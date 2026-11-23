@@ -58,7 +58,7 @@ export function AdminHeader() {
     },
     {
       href: '/admin/radar-harga',
-      label: 'Radar Harga Caringin',
+      label: 'Radar Harga Pasar',
       icon: LineChart,
       badge: '15.00 WIB',
     },

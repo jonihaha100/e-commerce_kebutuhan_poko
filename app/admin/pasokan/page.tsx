@@ -57,7 +57,7 @@ const INITIAL_SUPPLY_DATA: SupplyItem[] = [
   {
     id: 'sup-001',
     poNumber: 'PO-HL-2026-001',
-    productName: 'Pakcoy Hidroponik Lembang',
+    productName: 'Pakcoy Hidroponik',
     sku: 'PKC-01',
     category: 'VEGETABLE_1P',
     vendorName: 'Kang Asep (Gapoktan Lembang)',
@@ -118,7 +118,7 @@ const INITIAL_SUPPLY_DATA: SupplyItem[] = [
   {
     id: 'sup-004',
     poNumber: 'PO-HL-2026-004',
-    productName: 'Ubi Cilembu Madu (14 Hari Curing)',
+    productName: 'Ubi Cilembu Madu',
     sku: 'UBI-CLM-01',
     category: 'TUBER_1P',
     vendorName: 'Pak Ujang (Petani Cilembu Sumedang)',
@@ -238,7 +238,7 @@ export default function AdminPasokanPage() {
   const [qcNotesInput, setQcNotesInput] = useState<string>('');
 
   // Add Buffer Form State
-  const [bufferProduct, setBufferProduct] = useState(products[0]?.name || 'Pakcoy Hidroponik Lembang');
+  const [bufferProduct, setBufferProduct] = useState(products[0]?.name || 'Pakcoy Hidroponik');
   const [bufferQty, setBufferQty] = useState<number>(5);
   const [bufferVendor, setBufferVendor] = useState('Kang Asep (Gapoktan Lembang)');
   const [bufferPrice, setBufferPrice] = useState<number>(5500);
@@ -524,7 +524,7 @@ export default function AdminPasokanPage() {
               </span>
             </div>
             <span className="text-[10px] text-stone-400 block">
-              Kemitraan langsung Gapoktan Lembang & Ciwidey
+              Kemitraan langsung kelompok tani lokal
             </span>
           </div>
         </div>

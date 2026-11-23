@@ -162,11 +162,11 @@ export default function StorefrontHomePage() {
 
   const categories = [
     { id: 'ALL', label: 'Semua Produk', icon: '🧺' },
-    { id: 'VEGETABLE_1P', label: 'Sayur Daun (1P)', icon: '🥬' },
-    { id: 'TUBER_CURED_1P', label: 'Umbi Cilembu (1P)', icon: '🍠' },
-    { id: 'PROTEIN_1P', label: 'Ayam & Telur (1P)', icon: '🍗' },
-    { id: 'SPICE_3P', label: 'Bumbu & Cabai (3P)', icon: '🌶️' },
-    { id: 'STAPLE_3P', label: 'Sembako Pokok (3P)', icon: '🌾' },
+    { id: 'VEGETABLE_1P', label: 'Sayur Daun', icon: '🥬' },
+    { id: 'TUBER_CURED_1P', label: 'Umbi Cilembu', icon: '🍠' },
+    { id: 'PROTEIN_1P', label: 'Ayam & Telur', icon: '🍗' },
+    { id: 'SPICE_3P', label: 'Bumbu & Cabai', icon: '🌶️' },
+    { id: 'STAPLE_3P', label: 'Sembako Pokok', icon: '🌾' },
   ];
 
   // Active products master from AppContext

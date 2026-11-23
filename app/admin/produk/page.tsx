@@ -67,11 +67,11 @@ export default function AdminProdukPage() {
   // Category options
   const categoryOptions = [
     { id: 'ALL', label: 'Semua Komoditas' },
-    { id: 'VEGETABLE_1P', label: '🥬 Sayur Daun 1P (Ciwidey)' },
-    { id: 'TUBER_CURED_1P', label: '🍠 Umbi Cilembu 1P (Sumedang)' },
-    { id: 'PROTEIN_1P', label: '🍗 Ayam & Telur 1P (Lembang)' },
-    { id: 'SPICE_3P', label: '🌶️ Bumbu & Cabai 3P (Caringin)' },
-    { id: 'STAPLE_3P', label: '🌾 Sembako Pokok 3P' },
+    { id: 'VEGETABLE_1P', label: '🥬 Sayur Daun' },
+    { id: 'TUBER_CURED_1P', label: '🍠 Umbi Cilembu' },
+    { id: 'PROTEIN_1P', label: '🍗 Ayam & Telur' },
+    { id: 'SPICE_3P', label: '🌶️ Bumbu & Cabai' },
+    { id: 'STAPLE_3P', label: '🌾 Sembako Pokok' },
   ];
 
   // Auto-generate SKU when name changes in Add Form
@@ -255,7 +255,7 @@ export default function AdminProdukPage() {
               <span className="text-2xl font-black text-emerald-700">
                 {products.filter((p) => p.is_1p).length}
               </span>
-              <span className="text-[10px] text-stone-500 font-medium">Ciwidey & Lembang</span>
+              <span className="text-[10px] text-stone-500 font-medium">Petani Lokal</span>
             </div>
           </div>
 
@@ -267,7 +267,7 @@ export default function AdminProdukPage() {
               <span className="text-2xl font-black text-amber-700">
                 {products.filter((p) => !p.is_1p).length}
               </span>
-              <span className="text-[10px] text-stone-500 font-medium">Pasar Caringin</span>
+              <span className="text-[10px] text-stone-500 font-medium">Mitra Grosir</span>
             </div>
           </div>
 
@@ -402,7 +402,7 @@ export default function AdminProdukPage() {
                                 : 'bg-amber-50 text-amber-800 border border-amber-200'
                             }`}
                           >
-                            {p.is_1p ? '🌱 1P Petani Hulu' : '🏬 3P Grosir Caringin'}
+                            {p.is_1p ? '🌱 1P Petani' : '🏬 3P Grosir'}
                           </span>
                         </td>
 
@@ -513,7 +513,7 @@ export default function AdminProdukPage() {
                   <label className="text-xs font-bold text-stone-700">
                     Nama Komoditas / Hasil Panen *
                   </label>
-                  <span className="text-[10px] text-stone-400">Contoh: Bayam Organik Ciwidey</span>
+                  <span className="text-[10px] text-stone-400">Contoh: Bayam Organik</span>
                 </div>
                 <input
                   type="text"
@@ -571,11 +571,11 @@ export default function AdminProdukPage() {
                   onChange={(e) => setFormCategory(e.target.value as any)}
                   className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#24B05A] text-stone-900 font-medium"
                 >
-                  <option value="VEGETABLE_1P">🥬 Sayuran Daun 1P (Petani Ciwidey/Lembang)</option>
-                  <option value="TUBER_CURED_1P">🍠 Umbi Curing 1P (Sumedang Cilembu)</option>
-                  <option value="PROTEIN_1P">🍗 Unggas & Telur 1P (Peternak Lembang)</option>
-                  <option value="SPICE_3P">🌶️ Bumbu & Cabai 3P (Pasar Induk Caringin)</option>
-                  <option value="STAPLE_3P">🌾 Sembako Pokok 3P (Beras / Minyak Goreng)</option>
+                  <option value="VEGETABLE_1P">🥬 Sayur Daun</option>
+                  <option value="TUBER_CURED_1P">🍠 Umbi Cilembu</option>
+                  <option value="PROTEIN_1P">🍗 Ayam & Telur</option>
+                  <option value="SPICE_3P">🌶️ Bumbu & Cabai</option>
+                  <option value="STAPLE_3P">🌾 Sembako Pokok</option>
                 </select>
               </div>
 
@@ -749,11 +749,11 @@ export default function AdminProdukPage() {
                   onChange={(e) => setEditCategory(e.target.value as any)}
                   className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-stone-900 font-medium"
                 >
-                  <option value="VEGETABLE_1P">🥬 Sayuran Daun 1P (Petani Ciwidey/Lembang)</option>
-                  <option value="TUBER_CURED_1P">🍠 Umbi Curing 1P (Sumedang Cilembu)</option>
-                  <option value="PROTEIN_1P">🍗 Unggas & Telur 1P (Peternak Lembang)</option>
-                  <option value="SPICE_3P">🌶️ Bumbu & Cabai 3P (Pasar Induk Caringin)</option>
-                  <option value="STAPLE_3P">🌾 Sembako Pokok 3P (Beras / Minyak Goreng)</option>
+                  <option value="VEGETABLE_1P">🥬 Sayur Daun</option>
+                  <option value="TUBER_CURED_1P">🍠 Umbi Cilembu</option>
+                  <option value="PROTEIN_1P">🍗 Ayam & Telur</option>
+                  <option value="SPICE_3P">🌶️ Bumbu & Cabai</option>
+                  <option value="STAPLE_3P">🌾 Sembako Pokok</option>
                 </select>
               </div>
 

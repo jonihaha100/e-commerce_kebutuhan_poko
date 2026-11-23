@@ -50,7 +50,7 @@ export default function AdminLaporanPage() {
   const [isBookClosed, setIsBookClosed] = useState(false);
   const [closedAt, setClosedAt] = useState<string | null>(null);
   const [closedBy, setClosedBy] = useState<string | null>(null);
-  const [closingNotes, setClosingNotes] = useState('Rekonsiliasi rekening penampung QRIS Midtrans, saldo kas kecil central hub, dan transferan Gapoktan Lembang & Ciwidey telah cocok tanpa selisih.');
+  const [closingNotes, setClosingNotes] = useState('Rekonsiliasi rekening penampung QRIS Midtrans, saldo kas kecil central hub, dan transferan petani mitra telah cocok tanpa selisih.');
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
