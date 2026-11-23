@@ -29,9 +29,96 @@ import {
   Scale,
   CreditCard,
   Truck,
+  Eye,
+  Utensils,
+  ChefHat,
+  Sparkle,
+  Info,
 } from 'lucide-react';
 
 import { PromoBannerSlider } from '@/components/PromoBannerSlider';
+
+// Extra metadata for rich product detail modal (Layman friendly, practical kitchen info)
+interface ProductDetailMeta {
+  storageTips: string;
+  shelfLife: string;
+  cookingIdeas: string[];
+  qualityGrade: string;
+  servingPortion: string;
+}
+
+const PRODUCT_EXTRA_DETAILS: Record<string, ProductDetailMeta> = {
+  'PKC-01': {
+    storageTips: 'Bungkus dengan kertas/tisu dapur kering lalu simpan di crisper kulkas (suhu 4-8°C). Jangan dicuci sebelum disimpan agar tetap renyah.',
+    shelfLife: 'Tahan 4-5 hari di dalam chiller kulkas.',
+    cookingIdeas: ['Tumis Pakcoy Bawang Putih Gurih', 'Ca Pakcoy Jamur Saus Tiram', 'Pelengkap Sayur Mie Kuah / Sup Bakso'],
+    qualityGrade: 'Grade Super (Bebas pestisida kimia sintetis, daun renyah segar tanpa bolong ulat, akar bersih).',
+    servingPortion: '1 pack (250gr) pas untuk 2-3 porsi lauk makan keluarga.',
+  },
+  'UBI-CLM-01': {
+    storageTips: 'Simpan di tempat terbuka, kering, dan sejuk pada suhu ruang dengan sirkulasi udara baik. Jangan disimpan di kulkas dalam keadaan mentah.',
+    shelfLife: 'Tahan hingga 3 minggu di suhu ruang sejuk.',
+    cookingIdeas: ['Ubi Panggang / Oven Madu Meleleh', 'Kolak Manis Ubi Cilembu Santan', 'Camilan Sehat Rebus Pengganti Nasi'],
+    qualityGrade: 'Grade Oven Super (Telah melewati pemeraman/curing 14 hari penuh, getah madu alami siap keluar legit saat dipanggang).',
+    servingPortion: '1 kg berisi 4-6 buah ukuran sedang, pas untuk camilan santai keluarga.',
+  },
+  'AYM-FLT-01': {
+    storageTips: 'Jika tidak langsung dimasak hari ini, simpan di wadah tertutup dalam freezer beku (-18°C). Di chiller bawah bertahan maksimal 2 hari.',
+    shelfLife: '2 hari di chiller, hingga 3 bulan di freezer beku.',
+    cookingIdeas: ['Ayam Katsu Saus Teriyaki', 'Tumis Ayam Lada Hitam Paprika', 'Sup Bening Kaldu Ayam Dapur', 'Steak Ayam Teflon Sehat'],
+    qualityGrade: '100% Halal RPA Modern, bebas formalin & bahan kimia, daging segar dingin alami tanpa suntikan air/gel.',
+    servingPortion: '500gr dapat dipotong menjadi 4-5 porsi lauk makan siang/malam.',
+  },
+  'TLR-AYM-01': {
+    storageTips: 'Simpan di rak kulkas dengan bagian runcing di bawah agar kantung udara di atas tetap stabil dan telur tetap fresh.',
+    shelfLife: 'Tahan 3-4 minggu di kulkas, 2 minggu di suhu ruang.',
+    cookingIdeas: ['Telur Ceplok / Dadar Bawang Daun', 'Telur Balado Pedas Manis', 'Tamagoyaki / Telur Gulung Lembut'],
+    qualityGrade: 'Telur segar subuh fajar, cangkang coklat tebal bebas retak, kuning telur bulat kokoh dan tidak berbau amis.',
+    servingPortion: '1 kg berisi 16 butir telur ayam negeri fresh pilihan.',
+  },
+  'SSN-01': {
+    storageTips: 'Potong sedikit ujung pangkal jika kotor, bungkus kertas bersih, masukkan ke kantong sayur kulkas.',
+    shelfLife: 'Tahan 3-4 hari di lemari es chiller.',
+    cookingIdeas: ['Tumis Sawi Manis Tahu Sutra', 'Sayur Bening Jagung Manis Sawi', 'Pelengkap Mie Godog Jawa Gurih'],
+    qualityGrade: 'Petik subuh fajar, daun hijau segar cerah tanpa rasa pahit, batang renyah empuk.',
+    servingPortion: '1 ikat (250gr) cukup untuk 1 mangkuk sayur porsi 3-4 orang.',
+  },
+  'KKG-LMB-01': {
+    storageTips: 'Biarkan ikatan akar tetap utuh, bungkus kertas kering dan masukkan ke kantong sayur kulkas.',
+    shelfLife: 'Tahan 3-4 hari di chiller pendingin.',
+    cookingIdeas: ['Kangkung Tumis Bawang Saus Tiram', 'Plecing Kangkung Sambal Terasi', 'Tumis Kangkung Tauco Pedas'],
+    qualityGrade: 'Kangkung akar hijau segar, daun muda tidak alot, bebas residu bahan kimia.',
+    servingPortion: '1 ikat (300gr) pas untuk 1 piring saji tumisan keluarga.',
+  },
+  'BRS-PW-05': {
+    storageTips: 'Simpan di wadah beras (rice box) tertutup rapat di tempat kering. Berikan beberapa lembar daun jeruk kering untuk menjaga dari kutu.',
+    shelfLife: 'Tahan 6-12 bulan di tempat kering dan sejuk.',
+    cookingIdeas: ['Nasi Putih Pulen Wangi Santap Harian', 'Nasi Uduk Gurih Santan', 'Nasi Goreng Spesial'],
+    qualityGrade: 'Beras pandan wangi asli, bulir utuh, putih bersih alami tanpa pemutih, tanpa pengawet atau pewangi sintetis.',
+    servingPortion: 'Karung 5 kg mencukupi konsumsi nasi 1 keluarga (3-4 jiwa) selama 10-14 hari.',
+  },
+  'CBI-RWT-3P': {
+    storageTips: 'Petik tangkai cabai sebelum disimpan (jangan dicuci dulu), lapisi wadah kedap udara dengan tisu dapur, simpan di chiller.',
+    shelfLife: 'Tahan 2-3 minggu tetap segar dan pedas.',
+    cookingIdeas: ['Sambal Bawang Ulek Pedas Nendang', 'Bumbu Dasar Balado', 'Pelengkap Lalapan & Gorengan'],
+    qualityGrade: 'Cabai rawit domba merah menyala, tingkat pedas maksimal, buah padat tidak lembek/busuk.',
+    servingPortion: '1 pack (200gr) cukup untuk stok sambal pedas 1-2 minggu.',
+  },
+  'BWG-MRH-3P': {
+    storageTips: 'Simpan di suhu ruang dengan sirkulasi udara baik (keranjang kawat/anyaman). Hindari kulkas agar tidak lembek dan berjamur.',
+    shelfLife: 'Tahan 1-2 bulan di tempat kering berventilasi.',
+    cookingIdeas: ['Bawang Merah Goreng Renyah Gurih', 'Bumbu Dasar Aneka Tumis Nusantara', 'Acar Bawang Segar'],
+    qualityGrade: 'Bawang merah kering simpan pilihan, umbi padat merah tua mengkilap, bersih dari tanah basah.',
+    servingPortion: '500gr mencukupi bumbu masak harian keluarga selama 2-3 minggu.',
+  },
+  'MYK-GRG-2L': {
+    storageTips: 'Tutup rapat kemasan pouch setelah dituang dan letakkan di tempat yang sejuk dan tidak terpapar sinar matahari langsung.',
+    shelfLife: 'Tahan hingga 12 bulan.',
+    cookingIdeas: ['Menggoreng Renyah (Deep Fry)', 'Menumis Bumbu Masakan Harum', 'Bahan Olesan Bakaran'],
+    qualityGrade: 'Minyak kelapa sawit murni berkualitas tinggi, jernih berkilau, difortifikasi Vitamin A.',
+    servingPortion: 'Pouch 2 Liter mencukupi kebutuhan goreng & tumis keluarga selama 2-3 minggu.',
+  },
+};
 
 // Pricing options derived directly from the real Berkah Tani Sejahtera catalog (PDF Mei 2024)
 interface PortionOption {
@@ -159,6 +246,10 @@ export default function StorefrontHomePage() {
 
   // Share WA Toast feedback
   const [shareFeedback, setShareFeedback] = useState(false);
+
+  // Product Detail Modal state (layman-friendly interactive details)
+  const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
+  const [detailActiveTab, setDetailActiveTab] = useState<'info' | 'storage' | 'recipes'>('info');
 
   const categories = [
     { id: 'ALL', label: 'Semua Produk', icon: '🧺' },
@@ -464,7 +555,12 @@ export default function StorefrontHomePage() {
             return (
               <div
                 key={product.id}
-                className="astro-card p-3 sm:p-4 flex flex-col justify-between group hover:border-[#4C9BD5] transition-all bg-white"
+                onClick={() => {
+                  setSelectedProductDetail(product);
+                  setDetailActiveTab('info');
+                }}
+                className="astro-card p-3 sm:p-4 flex flex-col justify-between group hover:border-[#24B05A] transition-all bg-white cursor-pointer relative hover:shadow-md"
+                title="Klik untuk melihat deskripsi detail, resep, dan tips penyimpanan"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-1">
@@ -492,9 +588,12 @@ export default function StorefrontHomePage() {
                     <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight group-hover:text-[#24B05A] transition line-clamp-1">
                       {product.name}
                     </h3>
-                    <span className="text-[10px] text-slate-400">
-                      Pilihan takaran masak harian:
-                    </span>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                      <span>Pilihan takaran:</span>
+                      <span className="text-[#24B05A] font-bold group-hover:underline flex items-center gap-0.5">
+                        Info Detail &rarr;
+                      </span>
+                    </div>
                   </div>
 
                   {/* TIERED PORTION SELECTOR BUTTONS (From real PDF catalog!) */}
@@ -502,9 +601,10 @@ export default function StorefrontHomePage() {
                     {portionList.map((portion, idx) => (
                       <button
                         key={portion.label}
-                        onClick={() =>
-                          setSelectedPortions((prev) => ({ ...prev, [product.id]: idx }))
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPortions((prev) => ({ ...prev, [product.id]: idx }));
+                        }}
                         className={`px-2 py-1 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer ${
                           selectedIdx === idx
                             ? 'bg-[#24B05A] text-white shadow-2xs'
@@ -547,16 +647,25 @@ export default function StorefrontHomePage() {
                   {/* Astro Stepper Button */}
                   {qtyInCart === 0 ? (
                     <button
-                      onClick={() => addToCart(product, dynamicPrice, 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product, dynamicPrice, 1);
+                      }}
                       className="w-full py-2 bg-[#24B05A] hover:bg-[#1B8A44] text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Tambah ({currentPortion.label})</span>
                     </button>
                   ) : (
-                    <div className="flex items-center justify-between bg-slate-100 border border-slate-200 rounded-xl p-1">
+                    <div
+                      className="flex items-center justify-between bg-slate-100 border border-slate-200 rounded-xl p-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
-                        onClick={() => updateQty(product.id, qtyInCart - 1)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateQty(product.id, qtyInCart - 1);
+                        }}
                         className="w-7 h-7 rounded-lg bg-white text-slate-700 hover:bg-slate-200 flex items-center justify-center transition shadow-2xs font-bold cursor-pointer"
                         aria-label="Kurangi"
                       >
@@ -568,7 +677,10 @@ export default function StorefrontHomePage() {
                       </span>
 
                       <button
-                        onClick={() => updateQty(product.id, qtyInCart + 1)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateQty(product.id, qtyInCart + 1);
+                        }}
                         className="w-7 h-7 rounded-lg bg-[#24B05A] text-white hover:bg-[#1B8A44] flex items-center justify-center transition shadow-2xs font-bold cursor-pointer"
                         aria-label="Tambah"
                       >
@@ -615,6 +727,318 @@ export default function StorefrontHomePage() {
           </div>
         </div>
       )}
+
+      {/* INTERACTIVE PRODUCT DETAIL MODAL (Triggered when tapping/clicking any product item) */}
+      {selectedProductDetail && (() => {
+        const detailProduct = selectedProductDetail;
+        const catalogPriceEntry = catalogPrices.find((cp) => cp.product_id === detailProduct.id);
+        const dynamicBasePrice = catalogPriceEntry?.sell_price_idr || 15000;
+        const portionList = CATALOG_PORTIONS[detailProduct.sku] || CATALOG_PORTIONS[detailProduct.id] || [
+          {
+            label: detailProduct.unit,
+            price: dynamicBasePrice,
+            farmerSplit: Math.round(dynamicBasePrice * 0.7),
+            opsSplit: Math.round(dynamicBasePrice * 0.3),
+            marketBenchmark: Math.round(dynamicBasePrice * 1.15),
+          },
+        ];
+        const selectedIdx = selectedPortions[detailProduct.id] || 0;
+        const currentPortion = portionList[selectedIdx] || portionList[0];
+        const extra = PRODUCT_EXTRA_DETAILS[detailProduct.sku] || {
+          storageTips: 'Simpan di tempat sejuk atau bagian bawah kulkas agar kesegaran alaminya tetap terjaga.',
+          shelfLife: 'Tahan 3-5 hari dalam suhu dingin.',
+          cookingIdeas: ['Aneka Olahan Masakan Dapur Keluarga'],
+          qualityGrade: 'Grade Pilihan Segar (Sortir subuh, bebas bahan kimia sintetis berbahaya).',
+          servingPortion: `1 ${detailProduct.unit} cukup untuk konsumsi masak harian keluarga.`,
+        };
+        const inCart = cart.find((item) => item.product.id === detailProduct.id);
+        const qtyInCart = inCart ? inCart.qty : 0;
+
+        const dynamicPrice: DailyCatalogPrice = {
+          id: `${detailProduct.id}-${currentPortion.label}`,
+          cycle_id: 'd1',
+          product_id: detailProduct.id,
+          sell_price_idr: currentPortion.price,
+          min_safe_price_idr: Math.round(currentPortion.price * 0.9),
+          is_failover_3p: !detailProduct.is_1p,
+          signal_type: 'STABLE',
+          farmer_split_idr: currentPortion.farmerSplit,
+          ops_split_idr: currentPortion.opsSplit,
+        };
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+            onClick={() => setSelectedProductDetail(null)}
+          >
+            <div
+              className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Top Header */}
+              <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                      detailProduct.is_1p
+                        ? 'bg-[#EBF7EE] text-[#1B8A44] border border-[#BAE6C5]'
+                        : 'bg-[#FEF3C7] text-[#92400E] border border-[#FCD34D]'
+                    }`}
+                  >
+                    {detailProduct.is_1p ? '🌱 1P Petani' : '🏬 3P Grosir'}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-amber-500" />
+                    Panen Subuh 03.00
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedProductDetail(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-200/60 transition cursor-pointer"
+                  aria-label="Tutup"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Scrollable Body */}
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
+                {/* Product Hero Info */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-emerald-50 to-slate-100 border border-emerald-100 flex items-center justify-center text-5xl flex-shrink-0 shadow-2xs">
+                    {getProductIcon(detailProduct)}
+                  </div>
+                  <div className="space-y-1 text-center sm:text-left flex-1">
+                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                      KODE SKU: {detailProduct.sku}
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+                      {detailProduct.name}
+                    </h2>
+                    <p className="text-xs text-slate-600 leading-relaxed pt-0.5">
+                      {detailProduct.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Gramature / Portion Selector */}
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <Scale className="w-4 h-4 text-[#24B05A]" />
+                      Pilihan Takaran Porsi Masak:
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                      Hemat Rp {formatRupiah(currentPortion.marketBenchmark - currentPortion.price)} vs Pasar
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {portionList.map((portion, idx) => (
+                      <button
+                        key={portion.label}
+                        type="button"
+                        onClick={() =>
+                          setSelectedPortions((prev) => ({ ...prev, [detailProduct.id]: idx }))
+                        }
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          selectedIdx === idx
+                            ? 'bg-[#24B05A] text-white border-[#24B05A] shadow-xs'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-[#24B05A]'
+                        }`}
+                      >
+                        <span className="text-xs font-extrabold block truncate">
+                          {portion.label}
+                        </span>
+                        <span
+                          className={`text-[11px] font-bold block ${
+                            selectedIdx === idx ? 'text-emerald-100' : 'text-[#24B05A]'
+                          }`}
+                        >
+                          {formatRupiah(portion.price)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1.5 border-t border-slate-200/60">
+                    <span>🌾 Modal Petani: <b>{formatRupiah(currentPortion.farmerSplit)}</b></span>
+                    <span>📦 Kemas & Distribusi: <b>{formatRupiah(currentPortion.opsSplit)}</b></span>
+                  </div>
+                </div>
+
+                {/* 3 Interactive Information Tabs (Educational & Practical Kitchen Info) */}
+                <div className="space-y-3">
+                  <div className="flex border-b border-slate-200 text-xs font-bold gap-2 overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => setDetailActiveTab('info')}
+                      className={`pb-2.5 px-3 flex items-center gap-1.5 border-b-2 transition whitespace-nowrap cursor-pointer ${
+                        detailActiveTab === 'info'
+                          ? 'border-[#24B05A] text-[#24B05A]'
+                          : 'border-transparent text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Standar Mutu & Porsi</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDetailActiveTab('storage')}
+                      className={`pb-2.5 px-3 flex items-center gap-1.5 border-b-2 transition whitespace-nowrap cursor-pointer ${
+                        detailActiveTab === 'storage'
+                          ? 'border-[#24B05A] text-[#24B05A]'
+                          : 'border-transparent text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <Leaf className="w-4 h-4" />
+                      <span>Tips Simpan di Kulkas</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDetailActiveTab('recipes')}
+                      className={`pb-2.5 px-3 flex items-center gap-1.5 border-b-2 transition whitespace-nowrap cursor-pointer ${
+                        detailActiveTab === 'recipes'
+                          ? 'border-[#24B05A] text-[#24B05A]'
+                          : 'border-transparent text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <ChefHat className="w-4 h-4" />
+                      <span>Ide Masakan</span>
+                    </button>
+                  </div>
+
+                  {/* Tab 1: Kualitas & Porsi */}
+                  {detailActiveTab === 'info' && (
+                    <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100 space-y-2 text-xs">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-slate-900 block">Kualitas & Kebersihan:</span>
+                          <span className="text-slate-600 leading-relaxed">{extra.qualityGrade}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2 pt-1 border-t border-emerald-200/50">
+                        <Users className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-slate-900 block">Kecukupan Porsi Masak:</span>
+                          <span className="text-slate-600 leading-relaxed">{extra.servingPortion}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 2: Tips Simpan */}
+                  {detailActiveTab === 'storage' && (
+                    <div className="p-4 bg-sky-50/60 rounded-2xl border border-sky-100 space-y-2 text-xs">
+                      <div className="flex items-start gap-2">
+                        <Clock className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-slate-900 block">Daya Tahan Kesegaran:</span>
+                          <span className="text-slate-600 leading-relaxed">{extra.shelfLife}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2 pt-1 border-t border-sky-200/50">
+                        <Leaf className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-slate-900 block">Cara Menyimpan di Rumah:</span>
+                          <span className="text-slate-600 leading-relaxed">{extra.storageTips}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 3: Resep Olahan */}
+                  {detailActiveTab === 'recipes' && (
+                    <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-100 space-y-2 text-xs">
+                      <span className="font-bold text-slate-900 block flex items-center gap-1.5">
+                        <Utensils className="w-4 h-4 text-amber-600" />
+                        Rekomendasi Menu Dapur Keluarga:
+                      </span>
+                      <ul className="space-y-1.5 pl-1">
+                        {extra.cookingIdeas.map((recipe, rIdx) => (
+                          <li key={rIdx} className="flex items-center gap-2 text-slate-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>{recipe}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Fresh Guarantee Banner */}
+                <div className="p-3.5 bg-slate-100 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-slate-900 font-extrabold block text-xs">
+                        Garansi Mutu Kesegaran 100%
+                      </span>
+                      <span className="text-slate-600 text-[11px]">
+                        Kurang segar atau rusak saat diambil di pos komplek? Langsung kami ganti baru!
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Bottom Sticky Action Bar */}
+              <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-medium">
+                    Total Harga ({currentPortion.label}):
+                  </span>
+                  <span className="text-lg sm:text-xl font-black text-[#24B05A]">
+                    {formatRupiah(currentPortion.price)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {qtyInCart > 0 && (
+                    <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => updateQty(detailProduct.id, qtyInCart - 1)}
+                        className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center transition font-bold cursor-pointer"
+                        aria-label="Kurangi"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-xs font-black text-slate-900 px-3">
+                        {qtyInCart}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQty(detailProduct.id, qtyInCart + 1)}
+                        className="w-8 h-8 rounded-lg bg-[#24B05A] text-white hover:bg-[#1B8A44] flex items-center justify-center transition font-bold cursor-pointer"
+                        aria-label="Tambah"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addToCart(detailProduct, dynamicPrice, 1);
+                    }}
+                    className="px-5 py-2.5 bg-[#24B05A] hover:bg-[#1B8A44] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all hover:scale-102 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{qtyInCart > 0 ? 'Tambah Lagi' : 'Tambah ke Keranjang'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* INTERACTIVE ONBOARDING TOUR MODAL (Triggered by "▷ Mulai Tur Panduan Website & Fitur Baru") */}
       {showTour && (
