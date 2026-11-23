@@ -7,6 +7,7 @@ import {
   Package,
   ShoppingBag,
   LineChart,
+  MapPin,
   ExternalLink,
   ShieldCheck,
   Clock,
@@ -40,6 +41,12 @@ export function AdminHeader() {
       label: 'Monitor Pesanan Warga',
       icon: ShoppingBag,
       badge: 'Live',
+    },
+    {
+      href: '/admin/komplek',
+      label: 'Komplek & Drop Point',
+      icon: MapPin,
+      badge: 'Rute',
     },
     {
       href: '/admin/radar-harga',

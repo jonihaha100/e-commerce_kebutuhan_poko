@@ -26,6 +26,10 @@ interface AppContextType {
   setSelectedCluster: (cluster: Cluster) => void;
   clusters: Cluster[];
   selectClusterBySlug: (slug: string) => boolean;
+  addCluster: (cluster: Omit<Cluster, 'id'>) => void;
+  updateCluster: (clusterId: string, updates: Partial<Cluster>) => void;
+  deleteCluster: (clusterId: string) => void;
+  activateWaitlistCluster: (clusterId: string) => void;
 
   // Products Master & Catalog
   products: Product[];
@@ -63,7 +67,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [clusters] = useState<Cluster[]>(initialClusters);
+  const [clusters, setClusters] = useState<Cluster[]>(initialClusters);
   const [selectedCluster, setSelectedClusterState] = useState<Cluster>(initialClusters[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [currentUser, setCurrentUser] = useState<Account>(initialAccounts[4]); // Default to Ibu Ani (CUSTOMER)
@@ -86,6 +90,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (savedSlug) {
         const found = clusters.find((c) => c.qr_slug === savedSlug);
         if (found) setSelectedClusterState(found);
+      }
+      const savedClusters = localStorage.getItem('agri_clusters_master');
+      if (savedClusters) {
+        try {
+          const parsed = JSON.parse(savedClusters);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setClusters(parsed);
+          }
+        } catch (e) {
+          console.error('Failed to parse saved clusters', e);
+        }
       }
       const savedRole = localStorage.getItem('agri_user_role');
       if (savedRole) {
@@ -127,6 +142,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [clusters]);
+
+  // Cluster CRUD
+  const addCluster = (newClusterData: Omit<Cluster, 'id'>) => {
+    const newId = `c${Date.now()}`;
+    const newCluster: Cluster = {
+      ...newClusterData,
+      id: newId,
+    };
+    setClusters((prev) => {
+      const updated = [...prev, newCluster];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('agri_clusters_master', JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
+  const updateCluster = (clusterId: string, updates: Partial<Cluster>) => {
+    setClusters((prev) => {
+      const updated = prev.map((c) => (c.id === clusterId ? { ...c, ...updates } : c));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('agri_clusters_master', JSON.stringify(updated));
+      }
+      return updated;
+    });
+    if (selectedCluster.id === clusterId) {
+      setSelectedClusterState((prev) => ({ ...prev, ...updates }));
+    }
+  };
+
+  const deleteCluster = (clusterId: string) => {
+    setClusters((prev) => {
+      const updated = prev.filter((c) => c.id !== clusterId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('agri_clusters_master', JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
+  const activateWaitlistCluster = (clusterId: string) => {
+    updateCluster(clusterId, {
+      status: 'ACTIVE',
+      delivery_mode: 'MOBILE_DROP_POINT',
+      waitlist_count: 5,
+    });
+  };
 
   // Product CRUD
   const addProduct = (newProdData: Omit<Product, 'id'>, initialSellPrice: number, modalPrice?: number) => {
@@ -311,6 +373,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setSelectedCluster,
         clusters,
         selectClusterBySlug,
+        addCluster,
+        updateCluster,
+        deleteCluster,
+        activateWaitlistCluster,
         products,
         addProduct,
         updateProduct,
