@@ -76,88 +76,125 @@ export default function AdminLaporanPage() {
   const [simulatorOption, setSimulatorOption] = useState<'OPTION_1' | 'OPTION_2' | 'OPTION_3'>('OPTION_1');
 
   // Option 1: Preset Skenario Strategis
-  const [activeScenarioId, setActiveScenarioId] = useState<'STATUS_QUO' | 'BUAH_BATU' | 'SCALE_UP'>('BUAH_BATU');
+  const [activeScenarioId, setActiveScenarioId] = useState<'STATUS_QUO' | 'BUAH_BATU' | 'SCALE_UP'>('STATUS_QUO');
 
   // What-If Simulation State Variables (Interactive across Opsi 1 & 2)
-  const [simClusters, setSimClusters] = useState(3);
-  const [simOrdersPerDay, setSimOrdersPerDay] = useState(20);
-  const [simAov, setSimAov] = useState(50700);
+  const [simClusters, setSimClusters] = useState(5);
+  const [simOrdersPerDay, setSimOrdersPerDay] = useState(10);
+  const [simAov, setSimAov] = useState(35000);
 
   // Helper to switch scenario preset in Option 1
   const applyScenarioPreset = (scenario: 'STATUS_QUO' | 'BUAH_BATU' | 'SCALE_UP') => {
     setActiveScenarioId(scenario);
     if (scenario === 'STATUS_QUO') {
-      setSimClusters(2);
-      setSimOrdersPerDay(15);
-      setSimAov(50700);
+      setSimClusters(5);
+      setSimOrdersPerDay(10);
+      setSimAov(35000);
     } else if (scenario === 'BUAH_BATU') {
-      setSimClusters(3);
-      setSimOrdersPerDay(20);
-      setSimAov(50700);
+      setSimClusters(10);
+      setSimOrdersPerDay(10);
+      setSimAov(35000);
     } else if (scenario === 'SCALE_UP') {
-      setSimClusters(4);
-      setSimOrdersPerDay(25);
-      setSimAov(65000);
+      setSimClusters(15);
+      setSimOrdersPerDay(10);
+      setSimAov(45000);
     }
   };
 
   // Simulated metrics derived dynamically
-  const simMonthlyOrders = simClusters * simOrdersPerDay * 26;
+  const simTotalDailyOrders = simClusters * simOrdersPerDay;
+  const simMonthlyOrders = simTotalDailyOrders * 26;
   const simGmv = simMonthlyOrders * simAov;
   const simGrossProfit = Math.round(simGmv * 0.248);
-  const simLogistics = simClusters * 100000 * 26; // Rp 100k x clusters x 26 hari
-  const simPackaging = Math.round(simGmv * 0.029);
+  const simCouriersNeeded = Math.max(1, Math.ceil(simClusters / 5));
+  const simLogistics = simCouriersNeeded * 70000 * 26; // Rp 70k (upah Rp 50k + bensin Rp 20k) per kurir x 26 hari
+  const simPackaging = simMonthlyOrders * 1000; // Rp 1.000 / paket kantong ramah lingkungan
   const simNetProfit = simGrossProfit - simLogistics - simPackaging;
   const simNetMargin = simGmv > 0 ? ((simNetProfit / simGmv) * 100).toFixed(1) : '0';
 
-  // Unit Economics & BEP calculation per cluster
-  // Net contribution margin per order = AOV * (0.248 gross margin - 0.029 packaging) = AOV * 0.219
-  const contributionPerOrder = Math.max(1, Math.round(simAov * 0.219));
-  const dailyBepOrders = Math.ceil(100000 / contributionPerOrder); // e.g. ~9 orders/day
-  const isAboveBep = simOrdersPerDay >= dailyBepOrders;
-  const dailyProfitPerCluster = (simOrdersPerDay * contributionPerOrder) - 100000;
-  const monthlyProfitPerCluster = dailyProfitPerCluster * 26;
-  const bepPercentage = Math.min(200, Math.round((simOrdersPerDay / dailyBepOrders) * 100));
+  // Unit Economics & BEP calculation per kurir (5 komplek)
+  const contributionPerOrder = Math.max(1, Math.round(simAov * 0.248 - 1000));
+  const dailyBepOrders = Math.ceil(70000 / contributionPerOrder); // 70.000 / 7.680 = 10-11 orders/day
+  const dailyOrdersPerCourier = Math.round(simTotalDailyOrders / simCouriersNeeded);
+  const isAboveBep = dailyOrdersPerCourier >= dailyBepOrders;
+  const dailyProfitPerCourier = (dailyOrdersPerCourier * contributionPerOrder) - 70000;
+  const bepPercentage = Math.min(200, Math.round((dailyOrdersPerCourier / dailyBepOrders) * 100));
 
-  // Financial baseline numbers for the month (26 operating days, 2 active clusters)
+  // Financial baseline numbers for the month (26 operating days, 5 active clusters, 1 courier 50 orders/day)
   const totalDays = 26;
-  const dailyLogisticsBudget = 100000; // Rp50k Armada + Rp50k Mitra per komplek
-  const activeClusterCount = clusters.filter((c) => c.status === 'ACTIVE').length || 2;
-  const totalLogisticsBeban = totalDays * dailyLogisticsBudget * activeClusterCount; // Rp 5.200.000 for 2 clusters
+  const dailyLogisticsBudget = 70000; // Rp50k Honor Jasa Kurir 3 Jam + Rp20k Bensin Motor
+  const activeClusterCount = 5;
+  const totalLogisticsBeban = totalDays * dailyLogisticsBudget; // Rp 1.820.000 per bulan (1 kurir 5 komplek)
 
   // Aggregated figures based on orders & financial ratios
-  const totalOrdersCount = 780; // 30 orders/day x 26 days
-  const gmvTotal = 39540000; // Average order value ~Rp50.700
-  const cashbackGroupBuy = 1977000; // 5% blended cashback
-  const netRevenue = gmvTotal - cashbackGroupBuy; // Rp 37.563.000
-  const cogsHppHulu = 28250000; // 75,2% HPP belanja modal petani
-  const grossProfit = netRevenue - cogsHppHulu; // Rp 9.313.000 (24,8% gross margin)
-  const packagingAndOps = 1150000; // Bahan kemasan food-grade, es, kantong
-  const netOperatingIncome = grossProfit - totalLogisticsBeban - packagingAndOps; // Rp 2.963.000 (setelah semua biaya)
+  const totalOrdersCount = 1300; // 50 orders/day x 26 days
+  const gmvTotal = 45500000; // 1.300 order x Rp 35.000
+  const cashbackGroupBuy = 0; // Model prepaid harga pasti tanpa potongan gantung
+  const netRevenue = gmvTotal - cashbackGroupBuy; // Rp 45.500.000
+  const cogsHppHulu = 34216000; // 75.2% HPP belanja modal petani & pasar induk
+  const grossProfit = netRevenue - cogsHppHulu; // Rp 11.284.000 (24.8% gross margin)
+  const packagingAndOps = 1300000; // Rp 1.000 x 1.300 paket kantong ramah lingkungan & ice gel
+  const netOperatingIncome = grossProfit - totalLogisticsBeban - packagingAndOps; // Rp 8.164.000 (17.9% net margin)
 
   const clusterBreakdowns: ClusterReport[] = [
     {
       name: 'Antapani Indah',
-      totalOrders: 420,
-      gmv: 21280000,
-      cashback: 1064000,
-      netRevenue: 20216000,
-      cogsFarmer: 15162000,
-      grossProfit: 5054000,
-      logisticsCost: 2600000, // Rp 100k x 26 days
-      netProfit: 2454000,
+      totalOrders: 260,
+      gmv: 9100000,
+      cashback: 0,
+      netRevenue: 9100000,
+      cogsFarmer: 6843200,
+      grossProfit: 2256800,
+      logisticsCost: 364000, // Rp 1.820.000 / 5 komplek
+      netProfit: 1632800,
       status: 'ACTIVE',
     },
     {
       name: 'Arcamanik Endah',
-      totalOrders: 360,
-      gmv: 18260000,
-      cashback: 913000,
-      netRevenue: 17347000,
-      cogsFarmer: 13088000,
-      grossProfit: 4259000,
-      logisticsCost: 2600000, // Rp 100k x 26 days
-      netProfit: 1659000,
+      totalOrders: 260,
+      gmv: 9100000,
+      cashback: 0,
+      netRevenue: 9100000,
+      cogsFarmer: 6843200,
+      grossProfit: 2256800,
+      logisticsCost: 364000,
+      netProfit: 1632800,
+      status: 'ACTIVE',
+    },
+    {
+      name: 'Cisaranten Kulon Asri',
+      totalOrders: 260,
+      gmv: 9100000,
+      cashback: 0,
+      netRevenue: 9100000,
+      cogsFarmer: 6843200,
+      grossProfit: 2256800,
+      logisticsCost: 364000,
+      netProfit: 1632800,
+      status: 'ACTIVE',
+    },
+    {
+      name: 'Guruminda Megah',
+      totalOrders: 260,
+      gmv: 9100000,
+      cashback: 0,
+      netRevenue: 9100000,
+      cogsFarmer: 6843200,
+      grossProfit: 2256800,
+      logisticsCost: 364000,
+      netProfit: 1632800,
+      status: 'ACTIVE',
+    },
+    {
+      name: 'Riung Bandung Permai',
+      totalOrders: 260,
+      gmv: 9100000,
+      cashback: 0,
+      netRevenue: 9100000,
+      cogsFarmer: 6843200,
+      grossProfit: 2256800,
+      logisticsCost: 364000,
+      netProfit: 1632800,
       status: 'ACTIVE',
     },
     {
@@ -217,15 +254,15 @@ export default function AdminLaporanPage() {
         <h2>I. RINGKASAN EKSEKUTIF LABA RUGI (PROFIT & LOSS)</h2>
         <table>
           <tr><th>Pos Keuangan</th><th class='num'>Nilai (Rupiah)</th><th class='num'>Rasio (%)</th></tr>
-          <tr><td>Pendapatan Kotor Belanja Warga (GMV)</td><td class='num'>${formatRupiah(gmvTotal)}</td><td class='num'>100.0%</td></tr>
-          <tr><td>Potongan Cashback Group-Buy Komunitas</td><td class='num'>(${formatRupiah(cashbackGroupBuy)})</td><td class='num'>-5.0%</td></tr>
-          <tr class='bold' style='background-color: #f8fafc;'><td>Pendapatan Bersih (Net Revenue)</td><td class='num'>${formatRupiah(netRevenue)}</td><td class='num'>95.0%</td></tr>
-          <tr><td>HPP Bahan Pangan Petani & Pasar (COGS)</td><td class='num'>(${formatRupiah(cogsHppHulu)})</td><td class='num'>-71.5%</td></tr>
+          <tr><td>Pendapatan Kotor Belanja Warga (GMV 1.300 Order)</td><td class='num'>${formatRupiah(gmvTotal)}</td><td class='num'>100.0%</td></tr>
+          <tr><td>Potongan Diskon & Cashback Komunitas</td><td class='num'>Rp 0</td><td class='num'>0.0%</td></tr>
+          <tr class='bold' style='background-color: #f8fafc;'><td>Pendapatan Bersih (Net Revenue)</td><td class='num'>${formatRupiah(netRevenue)}</td><td class='num'>100.0%</td></tr>
+          <tr><td>HPP Bahan Pangan Petani & Pasar Induk (75.2%)</td><td class='num'>(${formatRupiah(cogsHppHulu)})</td><td class='num'>-75.2%</td></tr>
           <tr class='bold' style='background-color: #ecfdf5;'><td>Laba Kotor Operasional (Gross Profit)</td><td class='num green'>${formatRupiah(grossProfit)}</td><td class='num green'>24.8%</td></tr>
-          <tr><td>Beban Armada Pick-up Subuh (26 hari x 2 komplek)</td><td class='num'>(${formatRupiah(totalLogisticsBeban / 2)})</td><td class='num'>-6.6%</td></tr>
-          <tr><td>Beban Mitra Rumah-Gudang (26 hari x 2 komplek)</td><td class='num'>(${formatRupiah(totalLogisticsBeban / 2)})</td><td class='num'>-6.6%</td></tr>
-          <tr><td>Beban Kemasan Food-Grade, Es Gel & Hub</td><td class='num'>(${formatRupiah(packagingAndOps)})</td><td class='num'>-2.9%</td></tr>
-          <tr class='bold' style='background-color: #f0fdf4; font-size: 11pt;'><td>LABA BERSIH OPERASIONAL (NET PROFIT)</td><td class='num green'>${formatRupiah(netOperatingIncome)}</td><td class='num green'>7.5%</td></tr>
+          <tr><td>Honor Jasa Kurir Subuh (26 hari x Rp50.000)</td><td class='num'>(${formatRupiah(1300000)})</td><td class='num'>-2.9%</td></tr>
+          <tr><td>Bahan Bakar Motor Kurir (26 hari x Rp20.000)</td><td class='num'>(${formatRupiah(520000)})</td><td class='num'>-1.1%</td></tr>
+          <tr><td>Beban Kantong Ramah Lingkungan & Ice Gel (1.300 x Rp1.000)</td><td class='num'>(${formatRupiah(packagingAndOps)})</td><td class='num'>-2.9%</td></tr>
+          <tr class='bold' style='background-color: #f0fdf4; font-size: 11pt;'><td>LABA BERSIH OPERASIONAL (NET PROFIT)</td><td class='num green'>${formatRupiah(netOperatingIncome)}</td><td class='num green'>17.9%</td></tr>
         </table>
 
         <h2>II. RINCIAN PERFORMA PER KLASTER PERUMAHAN</h2>
@@ -235,7 +272,7 @@ export default function AdminLaporanPage() {
             <th class='num'>Pesanan</th>
             <th class='num'>Omzet (GMV)</th>
             <th class='num'>HPP Petani</th>
-            <th class='num'>Beban Logistik</th>
+            <th class='num'>Alokasi Kurir</th>
             <th class='num'>Laba Bersih</th>
           </tr>
           ${clusterBreakdowns
@@ -262,23 +299,23 @@ export default function AdminLaporanPage() {
           </tr>
           <tr>
             <td><b>1. Pasokan & Petani</b></td>
-            <td>Sayur daun & ayam filet menyerap 54% GMV dengan margin 28%. Penyerapan panen subuh 100%.</td>
-            <td><b class='green'>Naikkan kontrak panen petani +20%</b> untuk mengunci pasokan sayur daun fajar.</td>
+            <td>Komoditas sayur segar, telur ayam, dan bahan pokok dapur menyerap perputaran harian dengan margin rata-rata 24.8% dan susut (waste) 0%.</td>
+            <td><b class='green'>Kunci PO harian petani & pasar induk H-1 pukul 20:00 WIB</b> untuk mengamankan HPP 75.2%.</td>
           </tr>
           <tr>
             <td><b>2. Rute Klaster</b></td>
-            <td>Antapani (Surplus Rp 2.454.000), Arcamanik (Surplus Rp 1.659.000). Waitlist Buah Batu: 18 KK / 30 KK.</td>
-            <td><b>Tunda rute Buah Batu</b> hingga 30 KK agar tidak boncos di biaya armada Rp 50.000/hari.</td>
+            <td>5 Komplek aktif Bandung Timur mencetak laba bersih merata masing-masing Rp 1.632.800/bulan. Waitlist Buah Batu: 18 KK / 30 KK.</td>
+            <td><b>Tunda rute Buah Batu</b> hingga kuota 30 KK penuh sebelum membuka Rute Kurir ke-2.</td>
           </tr>
           <tr>
-            <td><b>3. Logistik Rp 100k</b></td>
-            <td>Biaya Rp 100.000/hari (Armada Rp50k + Mitra Rp50k) memakan 13.2% GMV. BEP tercapai di 8 order/hari.</td>
-            <td><b class='green'>Pertahankan formula Rp 100.000/hari</b> sebagai formula baku ekspansi komplek.</td>
+            <td><b>3. Logistik Kurir Rp 70k</b></td>
+            <td>Biaya kurir Rp 70.000/hari (Rp50k jasa 3 jam + Rp20k bensin) menyerap hanya 4.0% GMV. Titik impas (BEP) tercapai di 11 order/hari.</td>
+            <td><b class='green'>Tetapkan kurir shift subuh 3 jam Rp 70.000/hari</b> sebagai formula baku ekspansi rute.</td>
           </tr>
           <tr>
             <td><b>4. Integritas Audit</b></td>
-            <td>Akurasi data 99.8%. Saldo QRIS bank penampung klop tanpa selisih (Rp 0). 0 transaksi bodong.</td>
-            <td><b class='green'>SAH UNTUK TUTUP BUKU</b>. Alokasi laba: 65% dividen owner & 35% dana cadangan hub.</td>
+            <td>Akurasi data 99.8%. Selisih kas QRIS dan rekening penampung Rp 0. Tidak ada piutang beredar.</td>
+            <td><b class='green'>SAH UNTUK TUTUP BUKU</b>. Alokasi laba bersih (Rp 8.164.000): 65% dividen owner (Rp 5.306.600) & 35% cadangan hub (Rp 2.857.400).</td>
           </tr>
         </table>
 
@@ -319,7 +356,7 @@ export default function AdminLaporanPage() {
 
   // 2. Export as CSV (Spreadsheet Excel)
   const handleExportCsv = () => {
-    const headers = ['Nama Komplek', 'Status', 'Total Pesanan', 'Omzet Bruto (GMV)', 'Cashback', 'Pendapatan Bersih', 'HPP Petani', 'Beban Logistik', 'Laba Bersih'];
+    const headers = ['Nama Komplek', 'Status', 'Total Pesanan', 'Omzet Bruto (GMV)', 'Cashback', 'Pendapatan Bersih', 'HPP Petani', 'Beban Logistik Kurir', 'Laba Bersih'];
     const rows = clusterBreakdowns.map((c) => [
       c.name,
       c.status,
@@ -356,18 +393,19 @@ export default function AdminLaporanPage() {
     const message =
       `*LAPORAN KEUANGAN & TUTUP BUKU BULANAN*\n` +
       `*Berkah Tani Sejahtera (Agrojaya)*\n` +
-      `Periode: *November 2026*\n\n` +
-      `📊 *Ringkasan Laba Rugi (P&L):*\n` +
-      `• Total Pesanan Warga: *${totalOrdersCount} pesanan*\n` +
-      `• Total Omzet (GMV): *${formatRupiah(gmvTotal)}*\n` +
-      `• HPP Modal Petani: *${formatRupiah(cogsHppHulu)}*\n` +
+      `Periode: *November 2026 (26 Hari Kerja)*\n\n` +
+      `📊 *Ringkasan Laba Rugi (P&L - 5 Komplek):*\n` +
+      `• Total Pesanan Warga: *${totalOrdersCount} pesanan* (50 order/hari)\n` +
+      `• Total Omzet (GMV): *${formatRupiah(gmvTotal)}* (AOV Rp 35.000)\n` +
+      `• HPP Modal Petani & Pasar: *${formatRupiah(cogsHppHulu)}* (75.2%)\n` +
       `• Laba Kotor (Gross Margin): *${formatRupiah(grossProfit)}* (24.8%)\n` +
-      `• Beban Armada & Mitra: *${formatRupiah(totalLogisticsBeban)}*\n` +
-      `• Biaya Kemasan & QC: *${formatRupiah(packagingAndOps)}*\n` +
+      `• Beban Kurir & Bensin (Rp 70k/hari): *${formatRupiah(totalLogisticsBeban)}* (4.0%)\n` +
+      `• Biaya Kantong & Es Gel (Rp 1k/paket): *${formatRupiah(packagingAndOps)}* (2.9%)\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
-      `💰 *LABA BERSIH BERSIH:* *${formatRupiah(netOperatingIncome)}*\n\n` +
-      `📍 *Performa Klaster:* Antapani Indah (${formatRupiah(2454000)}), Arcamanik (${formatRupiah(1659000)})\n` +
-      `🔒 Status Buku: *${isBookClosed ? 'SUDAH TUTUP BUKU LENGKAP' : 'DRAFT SIAP DITINJAU'}*\n\n` +
+      `💰 *LABA BERSIH OPERASIONAL:* *${formatRupiah(netOperatingIncome)}* (17.9% Net Margin)\n\n` +
+      `📍 *Performa Klaster:* 5 Komplek Aktif masing-masing surplus *${formatRupiah(1632800)}/bln*\n` +
+      `🎯 *Titik Impas (BEP):* Tercapai di 11 order/hari (39 order laba murni)\n` +
+      `🔒 *Status Buku:* *${isBookClosed ? 'SUDAH TUTUP BUKU LENGKAP' : 'DRAFT SIAP DITINJAU & DIKUNCI'}*\n\n` +
       `Laporan lengkap dalam format DOC & PDF telah tersedia di dasbor admin.`;
 
     const ownerPhone = '6281234567890'; // Default owner phone
@@ -507,7 +545,7 @@ export default function AdminLaporanPage() {
                 </select>
               </div>
               <span className="text-[11px] text-stone-400">
-                26 Hari Kerja Operasional • 2 Klaster Perumahan Terlayani (Antapani & Arcamanik)
+                26 Hari Kerja Operasional • 5 Klaster Perumahan Terlayani (1 Kurir 3 Jam • 50 Order/Hari)
               </span>
             </div>
           </div>
@@ -555,7 +593,7 @@ export default function AdminLaporanPage() {
               </span>
             </div>
             <span className="text-[10px] text-stone-400 block">
-              Rata-rata: Rp50.700 / belanjaan
+              Rata-rata: Rp35.000 / belanjaan
             </span>
           </div>
 
@@ -573,25 +611,25 @@ export default function AdminLaporanPage() {
               </span>
             </div>
             <span className="text-[10px] text-stone-400 block">
-              Setelah dikurangi HPP petani
+              Setelah dikurangi HPP pasokan 75,2%
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
             <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block flex items-center gap-1">
               <Truck className="w-3.5 h-3.5" />
-              <span>Beban Logistik (Armada + Mitra)</span>
+              <span>Beban Kurir & Bensin</span>
             </span>
             <div className="flex items-baseline justify-between">
               <span className="text-2xl font-black text-amber-800">
                 {formatRupiah(totalLogisticsBeban)}
               </span>
               <span className="text-[10px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full font-bold">
-                2 Klaster
+                5 Klaster
               </span>
             </div>
             <span className="text-[10px] text-stone-400 block">
-              Rp100.000 / hari per komplek (26 hari)
+              Rp70.000 / hari (Rp50k jasa + Rp20k bensin)
             </span>
           </div>
 
@@ -605,7 +643,7 @@ export default function AdminLaporanPage() {
                 {formatRupiah(netOperatingIncome)}
               </span>
               <span className="text-[10px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full font-bold">
-                Bersih
+                17,9% Margin
               </span>
             </div>
             <span className="text-[10px] text-emerald-600 font-medium block">
@@ -633,7 +671,7 @@ export default function AdminLaporanPage() {
                 Pusat Intelijen Keputusan Eksekutif
               </h2>
               <p className="text-xs text-stone-500 mt-0.5">
-                Mengolah 780 data transaksi sejak awal bulan menjadi 4 keputusan bisnis yang terukur, valid, dan dapat langsung dieksekusi oleh manajemen.
+                Mengolah 1.300 data transaksi sejak awal bulan menjadi 4 keputusan bisnis yang terukur, valid, dan dapat langsung dieksekusi oleh manajemen.
               </p>
             </div>
 
@@ -681,7 +719,7 @@ export default function AdminLaporanPage() {
                     : 'text-stone-600 hover:text-stone-900'
                 }`}
               >
-                🚚 Logistik Rp100k
+                🚚 Kurir Rp70k
               </button>
               <button
                 type="button"
@@ -712,18 +750,18 @@ export default function AdminLaporanPage() {
                         Keputusan Pasokan & Margin
                       </span>
                       <h3 className="text-sm font-black text-stone-900">
-                        Alokasi Kontrak PO Petani Hulu
+                        Alokasi Kontrak PO Petani Hulu & Pasar
                       </h3>
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    Margin Tinggi 28%
+                    Gross Margin 24.8%
                   </span>
                 </div>
 
                 <div className="text-xs text-stone-600 space-y-1.5 bg-white p-3 rounded-xl border border-stone-100">
                   <p>
-                    <b>Data Transaksi Tervalidasi:</b> Dari 780 paket, <b>Pakcoy Hidroponik</b> & <b>Ayam Filet</b> menyerap 54% total omzet dengan margin kotor sehat 28% dan tingkat sisa (waste) 0%. Sementara cabai & bawang grosir marginnya tipis di 14%.
+                    <b>Data Transaksi Tervalidasi:</b> Dari 1.300 paket pesanan, komoditas sayur segar daun, telur ayam ras, tahu tempe, dan daging ayam menyerap 68% perputaran harian dengan margin rata-rata 24.8% dan sisa susut (waste) 0% karena dipetik/dipotong subuh langsung dikirim.
                   </p>
                 </div>
 
@@ -733,10 +771,10 @@ export default function AdminLaporanPage() {
                     Keputusan Eksekutif yang Direkomendasikan:
                   </span>
                   <p className="leading-relaxed text-[11px]">
-                    <b>Naikkan alokasi PO sayur daun & ayam sebesar +20%</b> untuk bulan depan. Pertahankan kuota komoditas bumbu pada batas buffer grosir harian untuk menghindari risiko susut timbangan.
+                    <b>Kunci kontrak PO harian petani hulu & grosir induk pada H-1 pukul 20:00 WIB</b> untuk mengamankan HPP 75.2%. Tidak perlu buffer stok berlebih di central hub demi menjaga kesegaran maksimal.
                   </p>
                   <span className="text-[10px] font-bold text-emerald-700 block pt-0.5 font-mono">
-                    📈 Dampak Finansial: Potensi kenaikan laba kotor +Rp 1.450.000 / bulan.
+                    📈 Dampak Finansial: Laba kotor bulanan terkunci stabil di Rp 11.284.000 / bulan.
                   </span>
                 </div>
               </div>
@@ -752,21 +790,21 @@ export default function AdminLaporanPage() {
                     </div>
                     <div>
                       <span className="text-[10px] font-bold text-purple-800 uppercase tracking-wider block font-mono">
-                        Keputusan Ekspansi Rute
+                        Keputusan Rute 5 Komplek
                       </span>
                       <h3 className="text-sm font-black text-stone-900">
-                        Aktivasi Rute Klaster Waitlist
+                        Evaluasi Rute Bandung Timur & Waitlist
                       </h3>
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                    Antapani & Arcamanik Surplus
+                    5 Komplek Surplus Merata
                   </span>
                 </div>
 
                 <div className="text-xs text-stone-600 space-y-1.5 bg-white p-3 rounded-xl border border-stone-100">
                   <p>
-                    <b>Data Transaksi Tervalidasi:</b> Antapani Indah mencetak laba bersih Rp 2.454.000 dan Arcamanik Rp 1.659.000. Klaster waitlist <b>Buah Batu Regency</b> saat ini baru terkumpul 18 KK (dari syarat kuota 30 KK).
+                    <b>Data Transaksi Tervalidasi:</b> 5 Komplek aktif (Antapani Indah, Arcamanik, Cisaranten Kulon, Guruminda, Riung Bandung) masing-masing menyumbang 260 paket dan mencetak laba bersih Rp 1.632.800/bulan. Klaster waitlist <b>Buah Batu Regency</b> terkumpul 18 KK.
                   </p>
                 </div>
 
@@ -776,16 +814,16 @@ export default function AdminLaporanPage() {
                     Keputusan Eksekutif yang Direkomendasikan:
                   </span>
                   <p className="leading-relaxed text-[11px]">
-                    <b>Tunda pengaktifan rute mobil drop point Buah Batu</b> hingga mencapai 30 KK penuh. Mengaktifkan sekarang berisiko boncos beban armada Rp 50.000/hari yang belum sebanding dengan volume serapan belanja.
+                    <b>Tunda rute Buah Batu Regency</b> hingga mencapai kuota 30 KK untuk menjadi jangkar <b>Rute Kurir ke-2</b> (5 komplek baru). Jangan mencampur rute kurir aktif agar durasi subuh tetap tepat waktu di bawah 3 jam.
                   </p>
                   <span className="text-[10px] font-bold text-purple-700 block pt-0.5 font-mono">
-                    🛡️ Pengendalian Risiko: Menyelamatkan potensi defisit subsidi Rp 1.300.000 / bulan.
+                    🛡️ Pengendalian Operasional: Mempertahankan SLA ketepatan waktu jam 07:30 WIB 100%.
                   </span>
                 </div>
               </div>
             )}
 
-            {/* Decision 3: Efisiensi Logistik Rp 100k */}
+            {/* Decision 3: Efisiensi Logistik Kurir Rp 70k */}
             {(decisionCategory === 'ALL' || decisionCategory === 'LOGISTICS') && (
               <div className="p-4 sm:p-5 rounded-2xl border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-amber-300 transition-all space-y-3 shadow-2xs">
                 <div className="flex items-center justify-between">
@@ -795,21 +833,21 @@ export default function AdminLaporanPage() {
                     </div>
                     <div>
                       <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block font-mono">
-                        Evaluasi Unit Economics
+                        Evaluasi Unit Economics Kurir
                       </span>
                       <h3 className="text-sm font-black text-stone-900">
-                        Kinerja Anggaran Distribusi Rp 100k/Hari
+                        Kinerja Kurir Subuh 3 Jam (Rp 70k/Hari)
                       </h3>
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                    BEP Tercapai: 8 Order/Hari
+                    BEP Cepat: 11 Order/Hari
                   </span>
                 </div>
 
                 <div className="text-xs text-stone-600 space-y-1.5 bg-white p-3 rounded-xl border border-stone-100">
                   <p>
-                    <b>Data Transaksi Tervalidasi:</b> Alokasi biaya logistik Rp 100.000/hari (Rp 50k Armada pick-up + Rp 50k Mitra sortir gudang) menyerap 13.2% dari GMV. Rata-rata order harian kedua komplek (15 order/hari) berada jauh di atas titik impas (*BEP* 8 order/hari).
+                    <b>Data Transaksi Tervalidasi:</b> Alokasi biaya kurir Rp 70.000/hari (Rp 50k honor jasa 3 jam + Rp 20k bensin) menyerap hanya 4.0% dari GMV (atau total OpEx 6.86% termasuk kantong ramah lingkungan). Dari target 50 order, titik impas (BEP) tercapai di order ke-11.
                   </p>
                 </div>
 
@@ -819,10 +857,10 @@ export default function AdminLaporanPage() {
                     Keputusan Eksekutif yang Direkomendasikan:
                   </span>
                   <p className="leading-relaxed text-[11px]">
-                    <b>Pertahankan model logistik Rp 100.000/hari</b> sebagai formula baku ekspansi. Kunci nilai rata-rata belanja warga (*AOV*) minimal Rp 45.000 melalui paket kombo agar margin tetap tebal.
+                    <b>Tetapkan model kurir subuh 3 jam Rp 70.000/hari</b> sebagai formula baku ekspansi multi-kurir. Sebanyak 39 order di atas BEP menghasilkan margin kontribusi bersih Rp 299.520/hari tanpa biaya kurir tambahan.
                   </p>
                   <span className="text-[10px] font-bold text-amber-800 block pt-0.5 font-mono">
-                    ⚡ Efisiensi Operasional: Menjamin laba bersih stabil di atas 7% dari omzet kotor.
+                    ⚡ Efisiensi Skala: Margin laba bersih terkunci sangat sehat di level 17.9%.
                   </span>
                 </div>
               </div>
@@ -862,7 +900,7 @@ export default function AdminLaporanPage() {
                     Keputusan Eksekutif yang Direkomendasikan:
                   </span>
                   <p className="leading-relaxed text-[11px]">
-                    <b>Sah untuk mengeksekusi Tutup Buku periode ini</b>. Alokasikan Laba Bersih (Rp 2.963.000) menjadi: <b>65% Dividen Owner (Rp 1.925.950)</b> dan <b>35% Kas Cadangan Operasional Hub (Rp 1.037.050)</b> untuk peremajaan styrofoam & es gel.
+                    <b>Sah untuk mengeksekusi Tutup Buku periode ini</b>. Alokasikan Laba Bersih (Rp 8.164.000) menjadi: <b>65% Dividen Owner (Rp 5.306.600)</b> dan <b>35% Kas Cadangan Operasional Hub & Perawatan Tas Kurir (Rp 2.857.400)</b>.
                   </p>
                   <span className="text-[10px] font-bold text-sky-800 block pt-0.5 font-mono">
                     💰 Kepastian Finansial: Buku kas terkunci resmi dengan nomor audit BTS-CL-202611-01.
@@ -960,7 +998,7 @@ export default function AdminLaporanPage() {
                     </div>
                   </div>
                   <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold">
-                    Formula Baku: Rp 100.000 / Hari (Rp 50k Armada + Rp 50k Mitra)
+                    Formula Baku: Kurir 3 Jam Rp 70.000 / Hari (Rp 50k Jasa + Rp 20k Bensin)
                   </span>
                 </div>
 
@@ -980,34 +1018,34 @@ export default function AdminLaporanPage() {
                         Skenario A • Realita Saat Ini
                       </span>
                       <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        🟢 Risiko Rendah
+                        🟢 1 Kurir (Aman)
                       </span>
                     </div>
                     <h5 className="text-sm font-black text-stone-900 mt-1">
-                      Status Quo (2 Komplek)
+                      Status Quo (1 Kurir • 5 Komplek)
                     </h5>
                     <p className="text-[11px] text-stone-500 mt-0.5">
-                      Antapani & Arcamanik • 15 order/hari
+                      Antapani, Arcamanik, Cisaranten, Guruminda, Riung • 50 order/hari
                     </p>
 
                     <div className="mt-3 pt-3 border-t border-stone-100 grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-[10px] text-stone-400 block">Proyeksi GMV:</span>
-                        <span className="font-mono font-bold text-stone-800">Rp 39.546.000</span>
+                        <span className="font-mono font-bold text-stone-800">Rp 45.500.000</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-stone-400 block">Laba Bersih:</span>
-                        <span className="font-mono font-black text-emerald-700">Rp 3.460.500</span>
+                        <span className="font-mono font-black text-emerald-700">Rp 8.164.000</span>
                       </div>
                     </div>
 
                     <div className="mt-3 p-2 rounded-xl bg-stone-50 text-[10px] text-stone-600 flex items-center justify-between">
-                      <span>Beban Logistik: <b>Rp 5.200.000</b></span>
-                      <span className="font-bold text-purple-700">Margin: 8.7%</span>
+                      <span>Beban Kurir: <b>Rp 1.820.000</b></span>
+                      <span className="font-bold text-purple-700">Margin: 17.9%</span>
                     </div>
                   </div>
 
-                  {/* Scenario B: Ekspansi Buah Batu */}
+                  {/* Scenario B: Ekspansi 2 Kurir */}
                   <div
                     onClick={() => applyScenarioPreset('BUAH_BATU')}
                     className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
@@ -1021,34 +1059,34 @@ export default function AdminLaporanPage() {
                         Skenario B • Rekomendasi Ekspansi
                       </span>
                       <span className="text-[10px] font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                        ⚡ Profit +175%
+                        ⚡ Profit +100%
                       </span>
                     </div>
                     <h5 className="text-sm font-black text-stone-900 mt-1">
-                      Buka Rute Buah Batu (3 Komplek)
+                      Buka Rute Kurir 2 (10 Komplek)
                     </h5>
                     <p className="text-[11px] text-stone-500 mt-0.5">
-                      3 Komplek • 20 order/hari per rute
+                      10 Komplek • 100 order/hari (2 Kurir Motor)
                     </p>
 
                     <div className="mt-3 pt-3 border-t border-stone-100 grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-[10px] text-stone-400 block">Proyeksi GMV:</span>
-                        <span className="font-mono font-bold text-stone-800">Rp 79.092.000</span>
+                        <span className="font-mono font-bold text-stone-800">Rp 91.000.000</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-stone-400 block">Laba Bersih:</span>
-                        <span className="font-mono font-black text-emerald-700">Rp 9.521.100</span>
+                        <span className="font-mono font-black text-emerald-700">Rp 16.328.000</span>
                       </div>
                     </div>
 
                     <div className="mt-3 p-2 rounded-xl bg-purple-50 text-[10px] text-purple-900 flex items-center justify-between">
-                      <span>Beban Logistik: <b>Rp 7.800.000</b></span>
-                      <span className="font-bold text-purple-700">Margin: 12.0%</span>
+                      <span>Beban Kurir: <b>Rp 3.640.000</b></span>
+                      <span className="font-bold text-purple-700">Margin: 17.9%</span>
                     </div>
                   </div>
 
-                  {/* Scenario C: Scale-up 4 Komplek */}
+                  {/* Scenario C: Scale-up 3 Kurir */}
                   <div
                     onClick={() => applyScenarioPreset('SCALE_UP')}
                     className={`p-4 rounded-2xl border-2 transition cursor-pointer relative ${
@@ -1066,26 +1104,26 @@ export default function AdminLaporanPage() {
                       </span>
                     </div>
                     <h5 className="text-sm font-black text-stone-900 mt-1">
-                      4 Komplek + Bundling AOV Rp65k
+                      3 Kurir (15 Komplek) + AOV Rp45k
                     </h5>
                     <p className="text-[11px] text-stone-500 mt-0.5">
-                      Optimalisasi keranjang dapur belanja keluarga
+                      150 order/hari • Bundling paket sembako keluarga
                     </p>
 
                     <div className="mt-3 pt-3 border-t border-stone-100 grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-[10px] text-stone-400 block">Proyeksi GMV:</span>
-                        <span className="font-mono font-bold text-stone-800">Rp 169.000.000</span>
+                        <span className="font-mono font-bold text-stone-800">Rp 175.500.000</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-stone-400 block">Laba Bersih:</span>
-                        <span className="font-mono font-black text-emerald-700">Rp 26.611.000</span>
+                        <span className="font-mono font-black text-emerald-700">Rp 34.164.000</span>
                       </div>
                     </div>
 
                     <div className="mt-3 p-2 rounded-xl bg-amber-50 text-[10px] text-amber-900 flex items-center justify-between">
-                      <span>Beban Logistik: <b>Rp 10.400.000</b></span>
-                      <span className="font-bold text-amber-800">Margin: 15.7%</span>
+                      <span>Beban Kurir: <b>Rp 5.460.000</b></span>
+                      <span className="font-bold text-amber-800">Margin: 19.5%</span>
                     </div>
                   </div>
                 </div>
@@ -1098,9 +1136,9 @@ export default function AdminLaporanPage() {
                         Hasil Analisis Skenario Terpilih:
                       </span>
                       <h4 className="text-base font-black text-stone-900">
-                        {activeScenarioId === 'STATUS_QUO' && 'Skenario A: Pertahankan 2 Komplek Eksisting'}
-                        {activeScenarioId === 'BUAH_BATU' && 'Skenario B: Buka Rute Baru Buah Batu Regency (3 Komplek)'}
-                        {activeScenarioId === 'SCALE_UP' && 'Skenario C: Ekspansi 4 Komplek & Peningkatan Nilai Keranjang'}
+                        {activeScenarioId === 'STATUS_QUO' && 'Skenario A: 1 Kurir Motor (5 Komplek Bandung Timur)'}
+                        {activeScenarioId === 'BUAH_BATU' && 'Skenario B: Ekspansi 2 Kurir Motor (10 Komplek Aktif)'}
+                        {activeScenarioId === 'SCALE_UP' && 'Skenario C: Akselerasi 3 Kurir (15 Komplek) & Bundling AOV Rp45.000'}
                       </h4>
                     </div>
 
@@ -1109,9 +1147,9 @@ export default function AdminLaporanPage() {
                       <div className="text-right">
                         <span className="text-[10px] text-stone-400 font-bold block uppercase">Tingkat Kelayakan:</span>
                         <span className="text-xs font-black text-emerald-700">
-                          {activeScenarioId === 'STATUS_QUO' && 'Sangat Aman (Baseline)'}
-                          {activeScenarioId === 'BUAH_BATU' && 'Sangat Layak (Yield Tertinggi)'}
-                          {activeScenarioId === 'SCALE_UP' && 'Layak (Butuh 2 Mitra Baru)'}
+                          {activeScenarioId === 'STATUS_QUO' && 'Sangat Aman & Terbukti (Baseline)'}
+                          {activeScenarioId === 'BUAH_BATU' && 'Sangat Layak (Yield Tinggi)'}
+                          {activeScenarioId === 'SCALE_UP' && 'Sangat Menguntungkan (Target Kuartal I)'}
                         </span>
                       </div>
                       <div className="w-24 h-2.5 bg-stone-100 rounded-full overflow-hidden p-0.5 border border-stone-200">
@@ -1120,7 +1158,7 @@ export default function AdminLaporanPage() {
                             activeScenarioId === 'STATUS_QUO'
                               ? 'w-1/3 bg-emerald-500'
                               : activeScenarioId === 'BUAH_BATU'
-                              ? 'w-4/5 bg-purple-600'
+                              ? 'w-2/3 bg-purple-600'
                               : 'w-full bg-amber-500'
                           }`}
                         />
@@ -1146,17 +1184,17 @@ export default function AdminLaporanPage() {
                         {formatRupiah(simGrossProfit)}
                       </span>
                       <span className="text-[10px] text-sky-700 block mt-0.5">
-                        Setelah HPP petani (71.5%)
+                        Setelah HPP pasokan (75.2%)
                       </span>
                     </div>
 
                     <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-100">
-                      <span className="text-[10px] text-amber-700 uppercase font-mono block">Beban Armada & Mitra</span>
+                      <span className="text-[10px] text-amber-700 uppercase font-mono block">Beban Kurir & Bensin</span>
                       <span className="text-base font-black text-amber-900 font-mono">
                         {formatRupiah(simLogistics)}
                       </span>
                       <span className="text-[10px] text-amber-700 block mt-0.5">
-                        Rp 100k x {simClusters} komplek x 26 hari
+                        Rp 70k x {simCouriersNeeded} kurir x 26 hari
                       </span>
                     </div>
 
@@ -1189,19 +1227,19 @@ export default function AdminLaporanPage() {
 
                     {activeScenarioId === 'STATUS_QUO' && (
                       <p className="text-xs leading-relaxed text-slate-200">
-                        <b>PERTINJAUAN STATUS QUO:</b> Model logistik Rp 100.000/hari di 2 komplek (Antapani & Arcamanik) telah berjalan stabil dengan laba bersih Rp 2.963.000/bulan. Fokus manajemen bulan depan adalah menaikkan order harian dari 15 ke 20 per komplek lewat katalog sayur daun & ayam filet sebelum menambah biaya armada rute baru.
+                        <b>PERTINJAUAN STATUS QUO (1 KURIR • 5 KOMPLEK):</b> Rute kurir subuh 3 jam melayani 5 komplek (Antapani Indah, Arcamanik, Cisaranten Kulon, Guruminda, Riung Bandung) telah menghasilkan <b>Laba Bersih Rp 8.164.000 / bulan</b>. Titik impas tercapai hanya di order ke-11 per hari, memberikan margin keselamatan bisnis yang sangat tebal (78%). Rekomendasi: Pertahankan sebagai fondasi baku peluncuran sistem.
                       </p>
                     )}
 
                     {activeScenarioId === 'BUAH_BATU' && (
                       <p className="text-xs leading-relaxed text-slate-200">
-                        <b>KEPUTUSAN EKSPANSI BUAH BATU (SANGAT DIREKOMENDASIKAN):</b> Tambahan beban logistik Rp 2.600.000 (Armada Rp50k + Mitra Rp50k x 26 hari) akan langsung ditutup oleh surplus laba kotor sebesar Rp 6.449.000. <b>Laba bersih melonjak +130% menjadi Rp 6.812.000/bulan</b>. Syarat eksekusi: Pastikan 30 KK waitlist mentransfer order perdana di H-1.
+                        <b>KEPUTUSAN EKSPANSI 2 KURIR (10 KOMPLEK):</b> Menambah 1 orang kurir motor subuh untuk klaster komplek kloter ke-2 (termasuk Buah Batu Regency yang mencapai kuota 30 KK) langsung menggandakan laba bersih menjadi <b>Rp 16.328.000 / bulan (+100%)</b>. Syarat: Rekrut 1 kurir motor baru dengan tas obrok 80L dan kunci rute 5 komplek baru.
                       </p>
                     )}
 
                     {activeScenarioId === 'SCALE_UP' && (
                       <p className="text-xs leading-relaxed text-slate-200">
-                        <b>KEPUTUSAN AKSELERASI SKALA PENUH (TARGET KUARTAL I 2027):</b> Dengan 4 komplek dan nilai belanja ditingkatkan ke Rp 65.000 via paket bundling sayur keluarga, <b>laba bersih menembus Rp 14.287.000/bulan</b>. Langkah persiapan: Rekrut 1 armada mobil pick-up cadangan dan 2 mitra rumah-gudang IRT baru di wilayah Bandung Selatan.
+                        <b>KEPUTUSAN AKSELERASI SKALA PENUH (TARGET KUARTAL I 2027):</b> Mengoperasikan 3 kurir motor (15 komplek terlayani) dan menaikkan nilai rata-rata keranjang dari Rp 35.000 menjadi Rp 45.000 via paket sembako komplit menghasilkan <b>Laba Bersih Rp 34.164.000 / bulan</b>. Net profit margin naik menjadi 19.5%.
                       </p>
                     )}
                   </div>
@@ -1229,7 +1267,7 @@ export default function AdminLaporanPage() {
                     </div>
                   </div>
                   <span className="text-[10px] font-mono text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200 font-bold">
-                    Biaya Tetap per Komplek: Rp 100.000 / Hari
+                    Biaya Tetap per Kurir (5 Komplek): Rp 70.000 / Hari
                   </span>
                 </div>
 
@@ -1238,17 +1276,19 @@ export default function AdminLaporanPage() {
                   <div className="lg:col-span-7 bg-white rounded-2xl border border-stone-200 p-5 space-y-4 shadow-2xs">
                     <h5 className="text-xs font-black text-stone-900 uppercase tracking-wider font-mono flex items-center gap-1.5 pb-2 border-b border-stone-100">
                       <Sliders className="w-3.5 h-3.5 text-stone-500" />
-                      Parameter Operasional Klaster
+                      Parameter Operasional Klaster & Kurir
                     </h5>
 
                     {/* Klaster Selector Pills */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-bold text-stone-700">1. Jumlah Klaster Terlayani:</span>
-                        <span className="font-mono font-black text-purple-700">{simClusters} Komplek Aktif</span>
+                        <span className="font-mono font-black text-purple-700">
+                          {simClusters} Komplek ({simCouriersNeeded} Kurir Motor)
+                        </span>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
-                        {[2, 3, 4, 5].map((num) => (
+                        {[5, 10, 15, 20].map((num) => (
                           <button
                             key={num}
                             type="button"
@@ -1264,7 +1304,7 @@ export default function AdminLaporanPage() {
                         ))}
                       </div>
                       <span className="text-[10px] text-stone-400 block pt-0.5">
-                        Total Beban Logistik: <b>{formatRupiah(simLogistics)}</b> (Rp 100.000 x {simClusters} x 26 hari)
+                        Total Beban Kurir: <b>{formatRupiah(simLogistics)}</b> (Rp 70.000 x {simCouriersNeeded} kurir x 26 hari)
                       </span>
                     </div>
 
@@ -1275,7 +1315,7 @@ export default function AdminLaporanPage() {
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => setSimOrdersPerDay(Math.max(5, simOrdersPerDay - 1))}
+                            onClick={() => setSimOrdersPerDay(Math.max(3, simOrdersPerDay - 1))}
                             className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
                             title="Kurang 1 order"
                           >
@@ -1286,7 +1326,7 @@ export default function AdminLaporanPage() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => setSimOrdersPerDay(Math.min(50, simOrdersPerDay + 1))}
+                            onClick={() => setSimOrdersPerDay(Math.min(30, simOrdersPerDay + 1))}
                             className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
                             title="Tambah 1 order"
                           >
@@ -1296,17 +1336,17 @@ export default function AdminLaporanPage() {
                       </div>
                       <input
                         type="range"
-                        min="5"
-                        max="40"
+                        min="3"
+                        max="25"
                         step="1"
                         value={simOrdersPerDay}
                         onChange={(e) => setSimOrdersPerDay(Number(e.target.value))}
                         className="w-full accent-sky-600 cursor-pointer"
                       />
                       <div className="flex justify-between text-[10px] text-stone-400">
-                        <span>Min: 5 order (Boncos)</span>
-                        <span className="text-amber-700 font-bold">Titik Impas (BEP): {dailyBepOrders} order/hari</span>
-                        <span>Max: 40 order</span>
+                        <span>Min: 3 order (Kurang)</span>
+                        <span className="text-amber-700 font-bold">BEP Kurir: {dailyBepOrders} order/kurir/hari</span>
+                        <span>Max: 25 order</span>
                       </div>
                     </div>
 
@@ -1317,7 +1357,7 @@ export default function AdminLaporanPage() {
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => setSimAov(Math.max(30000, simAov - 2500))}
+                            onClick={() => setSimAov(Math.max(25000, simAov - 2500))}
                             className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
                             title="Kurangi Rp 2.500"
                           >
@@ -1328,7 +1368,7 @@ export default function AdminLaporanPage() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => setSimAov(Math.min(90000, simAov + 2500))}
+                            onClick={() => setSimAov(Math.min(75000, simAov + 2500))}
                             className="w-6 h-6 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center font-bold cursor-pointer"
                             title="Tambah Rp 2.500"
                           >
@@ -1338,15 +1378,15 @@ export default function AdminLaporanPage() {
                       </div>
                       <input
                         type="range"
-                        min="30000"
-                        max="85000"
+                        min="25000"
+                        max="65000"
                         step="2500"
                         value={simAov}
                         onChange={(e) => setSimAov(Number(e.target.value))}
                         className="w-full accent-amber-500 cursor-pointer"
                       />
                       <span className="text-[10px] text-stone-400 block">
-                        Kontribusi Margin per Order: <b>{formatRupiah(contributionPerOrder)}</b> (setelah HPP petani & biaya kemasan)
+                        Kontribusi Margin Bersih per Paket: <b>{formatRupiah(contributionPerOrder)}</b> (setelah HPP petani 75.2% & kantong kemasan Rp 1.000)
                       </span>
                     </div>
                   </div>
@@ -1363,7 +1403,7 @@ export default function AdminLaporanPage() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-wider font-mono">
-                          Status Evaluasi Rute
+                          Status Evaluasi Rute Kurir
                         </span>
                         <span
                           className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
@@ -1372,35 +1412,35 @@ export default function AdminLaporanPage() {
                               : 'bg-rose-200 text-rose-900 border border-rose-400'
                           }`}
                         >
-                          {isAboveBep ? '🟢 SURPLUS (PROFIT)' : '🔴 BONCOS (SUBSIDI)'}
+                          {isAboveBep ? '🟢 SURPLUS (PROFIT)' : '🔴 DEFISIT (BELUM BEP)'}
                         </span>
                       </div>
 
                       <div>
                         <div className="text-2xl font-black font-mono">
                           {isAboveBep
-                            ? `+${formatRupiah(dailyProfitPerCluster)} / hari`
-                            : `-${formatRupiah(Math.abs(dailyProfitPerCluster))} / hari`}
+                            ? `+${formatRupiah(dailyProfitPerCourier)} / hari per kurir`
+                            : `-${formatRupiah(Math.abs(dailyProfitPerCourier))} / hari per kurir`}
                         </div>
                         <span className="text-[11px] block mt-0.5 opacity-80">
                           {isAboveBep
-                            ? `Surplus bersih per komplek setelah beban Rp 100.000`
-                            : `Defisit harian armada pick-up & mitra rumah-gudang`}
+                            ? `Surplus bersih setelah biaya kurir & bensin Rp 70.000/hari`
+                            : `Order harian belum menutup upah kurir Rp 70.000`}
                         </span>
                       </div>
 
                       {/* BEP Progress Bar */}
                       <div className="space-y-1 pt-1">
                         <div className="flex justify-between text-[10px] font-bold">
-                          <span>Volume Order: {simOrdersPerDay} order</span>
-                          <span>Titik Impas: {dailyBepOrders} order/hari</span>
+                          <span>Muatan per Kurir: {dailyOrdersPerCourier} paket/hari</span>
+                          <span>Titik Impas (BEP): {dailyBepOrders} paket</span>
                         </div>
                         <div className="w-full h-2.5 bg-white/80 rounded-full overflow-hidden p-0.5 border border-stone-200">
                           <div
                             className={`h-full rounded-full transition-all ${
                               isAboveBep ? 'bg-emerald-600' : 'bg-rose-600'
                             }`}
-                            style={{ width: `${Math.min(100, (simOrdersPerDay / (dailyBepOrders * 1.5)) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (dailyOrdersPerCourier / (dailyBepOrders * 1.5)) * 100)}%` }}
                           />
                         </div>
                       </div>
@@ -1410,11 +1450,11 @@ export default function AdminLaporanPage() {
                         <b>Rekomendasi Keputusan Eksekutif:</b>{' '}
                         {isAboveBep ? (
                           <span>
-                            Volume <b>{simOrdersPerDay} order/hari</b> sudah berada di atas BEP ({dailyBepOrders} order). <b>Aman untuk ekspansi rute baru</b>. Alokasikan surplus laba bersih ({formatRupiah(simNetProfit)}/bln) untuk dividen dan kas cadangan.
+                            Volume <b>{dailyOrdersPerCourier} paket/kurir/hari</b> sudah melampaui BEP ({dailyBepOrders} paket). <b>Sangat aman dijalankan</b>. Laba bersih bulanan total: <b>{formatRupiah(simNetProfit)}</b>.
                           </span>
                         ) : (
                           <span>
-                            <b>Tunda pengaktifan rute!</b> Pada volume {simOrdersPerDay} order/hari, rute ini akan tekor {formatRupiah(Math.abs(monthlyProfitPerCluster))}/bln per komplek. Solusi: Tetapkan syarat minimal 25 KK sebelum meluncurkan armada.
+                            <b>Tingkatkan order sebelum menambah kurir!</b> Pada volume {dailyOrdersPerCourier} paket/kurir, biaya kurir Rp 70.000 belum tertutup penuh. Pastikan minimal {dailyBepOrders} order per kurir.
                           </span>
                         )}
                       </div>
@@ -1473,82 +1513,98 @@ export default function AdminLaporanPage() {
                           Komponen Evaluasi & Finansial
                         </th>
                         <th className="p-3.5 text-stone-900 font-black text-[12px] w-1/4 bg-stone-100/60 border-l border-stone-200">
-                          <span className="text-[10px] text-stone-400 block font-mono font-normal">KONDISI RIIL</span>
-                          1. Status Quo (2 Komplek)
+                          <span className="text-[10px] text-stone-400 block font-mono font-normal">KONDISI RIIL FIX</span>
+                          1. Status Quo (1 Kurir • 5 Komplek)
                         </th>
                         <th className="p-3.5 text-purple-900 font-black text-[12px] w-1/4 bg-purple-50/70 border-l border-purple-200">
                           <span className="text-[10px] text-purple-600 block font-mono font-normal">RENCANA DEKAT</span>
-                          2. Buka Buah Batu (3 Komplek)
+                          2. Buka Kurir 2 (10 Komplek)
                         </th>
                         <th className="p-3.5 text-amber-900 font-black text-[12px] w-1/4 bg-amber-50/70 border-l border-amber-200">
                           <span className="text-[10px] text-amber-700 block font-mono font-normal">TARGET KUARTAL I</span>
-                          3. Skala 4 Komplek + Bundling
+                          3. Skala 3 Kurir + Bundling Rp45k
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-100 text-stone-700">
                       <tr>
                         <td className="p-3 font-bold text-stone-900">Cakupan Komplek & Rute</td>
-                        <td className="p-3 bg-stone-50/30 border-l border-stone-200">Antapani & Arcamanik</td>
+                        <td className="p-3 bg-stone-50/30 border-l border-stone-200">
+                          5 Komplek Bandung Timur (Antapani, Arcamanik, Cisaranten, Guruminda, Riung)
+                        </td>
                         <td className="p-3 bg-purple-50/20 border-l border-purple-200 font-bold text-purple-900">
-                          + Buah Batu Regency (3 Komplek)
+                          + 5 Komplek Rute 2 (Termasuk Buah Batu Regency)
                         </td>
                         <td className="p-3 bg-amber-50/20 border-l border-amber-200 font-bold text-amber-900">
-                          + Singgasana Pradana (4 Komplek)
+                          15 Komplek Terlayani Penuh
                         </td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3 font-bold text-stone-900">Alokasi Armada Kurir</td>
+                        <td className="p-3 font-mono bg-stone-50/30 border-l border-stone-200">1 Kurir Motor (Shift 3 Jam)</td>
+                        <td className="p-3 font-mono bg-purple-50/20 border-l border-purple-200 font-bold text-purple-800">2 Kurir Motor</td>
+                        <td className="p-3 font-mono bg-amber-50/20 border-l border-amber-200 font-bold text-amber-800">3 Kurir Motor</td>
                       </tr>
 
                       <tr>
                         <td className="p-3 font-bold text-stone-900">Target Order Harian</td>
-                        <td className="p-3 font-mono bg-stone-50/30 border-l border-stone-200">15 order / komplek (30 total)</td>
-                        <td className="p-3 font-mono bg-purple-50/20 border-l border-purple-200 font-bold text-purple-800">20 order / komplek (60 total)</td>
-                        <td className="p-3 font-mono bg-amber-50/20 border-l border-amber-200 font-bold text-amber-800">25 order / komplek (100 total)</td>
+                        <td className="p-3 font-mono bg-stone-50/30 border-l border-stone-200">50 order / hari (1.300/bln)</td>
+                        <td className="p-3 font-mono bg-purple-50/20 border-l border-purple-200 font-bold text-purple-800">100 order / hari (2.600/bln)</td>
+                        <td className="p-3 font-mono bg-amber-50/20 border-l border-amber-200 font-bold text-amber-800">150 order / hari (3.900/bln)</td>
                       </tr>
 
                       <tr>
                         <td className="p-3 font-bold text-stone-900">Rata-rata Keranjang (AOV)</td>
-                        <td className="p-3 font-mono bg-stone-50/30 border-l border-stone-200">Rp 50.700</td>
-                        <td className="p-3 font-mono bg-purple-50/20 border-l border-purple-200">Rp 50.700</td>
-                        <td className="p-3 font-mono bg-amber-50/20 border-l border-amber-200 font-bold text-amber-800">Rp 65.000 (Paket Kombo)</td>
+                        <td className="p-3 font-mono bg-stone-50/30 border-l border-stone-200">Rp 35.000</td>
+                        <td className="p-3 font-mono bg-purple-50/20 border-l border-purple-200">Rp 35.000</td>
+                        <td className="p-3 font-mono bg-amber-50/20 border-l border-amber-200 font-bold text-amber-800">Rp 45.000 (Paket Kombo Dapur)</td>
                       </tr>
 
                       <tr className="font-bold bg-stone-50/40">
                         <td className="p-3 text-stone-900">Proyeksi Omzet Bulanan (GMV)</td>
-                        <td className="p-3 font-mono text-stone-900 border-l border-stone-200">Rp 39.546.000</td>
-                        <td className="p-3 font-mono text-purple-900 border-l border-purple-200">Rp 79.092.000</td>
-                        <td className="p-3 font-mono text-amber-900 border-l border-amber-200">Rp 169.000.000</td>
+                        <td className="p-3 font-mono text-stone-900 border-l border-stone-200">Rp 45.500.000</td>
+                        <td className="p-3 font-mono text-purple-900 border-l border-purple-200">Rp 91.000.000</td>
+                        <td className="p-3 font-mono text-amber-900 border-l border-amber-200">Rp 175.500.000</td>
                       </tr>
 
                       <tr>
-                        <td className="p-3">HPP Belanja Petani (71.5%)</td>
-                        <td className="p-3 font-mono text-rose-600 border-l border-stone-200">(Rp 28.250.000)</td>
-                        <td className="p-3 font-mono text-rose-600 border-l border-purple-200">(Rp 56.550.000)</td>
-                        <td className="p-3 font-mono text-rose-600 border-l border-amber-200">(Rp 120.835.000)</td>
+                        <td className="p-3">HPP Belanja Modal Hulu (75.2%)</td>
+                        <td className="p-3 font-mono text-rose-600 border-l border-stone-200">(Rp 34.216.000)</td>
+                        <td className="p-3 font-mono text-rose-600 border-l border-purple-200">(Rp 68.432.000)</td>
+                        <td className="p-3 font-mono text-rose-600 border-l border-amber-200">(Rp 131.976.000)</td>
                       </tr>
 
                       <tr>
-                        <td className="p-3">Beban Logistik (Rp 100k/hari)</td>
-                        <td className="p-3 font-mono text-amber-700 border-l border-stone-200">Rp 5.200.000 (2 rute)</td>
-                        <td className="p-3 font-mono text-amber-700 border-l border-purple-200">Rp 7.800.000 (3 rute)</td>
-                        <td className="p-3 font-mono text-amber-700 border-l border-amber-200">Rp 10.400.000 (4 rute)</td>
+                        <td className="p-3">Beban Kurir & Bensin (Rp 70k/hari)</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-stone-200">Rp 1.820.000 (1 kurir)</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-purple-200">Rp 3.640.000 (2 kurir)</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-amber-200">Rp 5.460.000 (3 kurir)</td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-3">Beban Kantong Kemasan & Es Gel</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-stone-200">Rp 1.300.000</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-purple-200">Rp 2.600.000</td>
+                        <td className="p-3 font-mono text-amber-700 border-l border-amber-200">Rp 3.900.000</td>
                       </tr>
 
                       <tr className="bg-emerald-50/50 font-black text-emerald-950">
                         <td className="p-3 text-emerald-900">LABA BERSIH OPERASIONAL</td>
-                        <td className="p-3 font-mono text-emerald-800 border-l border-stone-200 text-sm">Rp 3.460.500</td>
+                        <td className="p-3 font-mono text-emerald-800 border-l border-stone-200 text-sm">Rp 8.164.000</td>
                         <td className="p-3 font-mono text-emerald-700 border-l border-purple-200 text-sm font-black">
-                          Rp 9.521.100 (+175%)
+                          Rp 16.328.000 (+100%)
                         </td>
                         <td className="p-3 font-mono text-emerald-700 border-l border-amber-200 text-sm font-black">
-                          Rp 26.611.000 (+669%)
+                          Rp 34.164.000 (+318%)
                         </td>
                       </tr>
 
                       <tr>
                         <td className="p-3 font-bold text-stone-900">Net Profit Margin</td>
-                        <td className="p-3 font-mono border-l border-stone-200 font-bold">8.7%</td>
-                        <td className="p-3 font-mono border-l border-purple-200 font-bold text-purple-700">12.0%</td>
-                        <td className="p-3 font-mono border-l border-amber-200 font-bold text-amber-700">15.7%</td>
+                        <td className="p-3 font-mono border-l border-stone-200 font-bold">17.9%</td>
+                        <td className="p-3 font-mono border-l border-purple-200 font-bold text-purple-700">17.9%</td>
+                        <td className="p-3 font-mono border-l border-amber-200 font-bold text-amber-700">19.5%</td>
                       </tr>
 
                       {/* Operational Feasibility Checklist */}
@@ -1559,30 +1615,30 @@ export default function AdminLaporanPage() {
                       </tr>
 
                       <tr>
-                        <td className="p-3 text-stone-600">Kesiapan Mitra Rumah-Gudang IRT</td>
-                        <td className="p-3 border-l border-stone-200 text-emerald-700 font-bold">✅ Siap (2 Mitra Aktif)</td>
-                        <td className="p-3 border-l border-purple-200 text-emerald-700 font-bold">✅ Siap (Bu Nurul Terverifikasi)</td>
-                        <td className="p-3 border-l border-amber-200 text-amber-700 font-bold">⚠️ Perlu Rekrut 2 Mitra Baru</td>
+                        <td className="p-3 text-stone-600">Kapasitas Kurir & Tas Obrok</td>
+                        <td className="p-3 border-l border-stone-200 text-emerald-700 font-bold">✅ 1 Kurir Aktif (65.1 kg aman)</td>
+                        <td className="p-3 border-l border-purple-200 text-purple-700 font-bold">⚡ Rekrut 1 Kurir Tambahan</td>
+                        <td className="p-3 border-l border-amber-200 text-amber-700 font-bold">⚠️ Total 3 Kurir Tetap</td>
                       </tr>
 
                       <tr>
-                        <td className="p-3 text-stone-600">Kapasitas Muatan Mobil Pick-up</td>
-                        <td className="p-3 border-l border-stone-200 text-emerald-700">✅ 30 box (Kapasitas 30%)</td>
-                        <td className="p-3 border-l border-purple-200 text-emerald-700">✅ 60 box (Kapasitas 60%)</td>
-                        <td className="p-3 border-l border-amber-200 text-amber-700 font-bold">⚠️ 100 box (Perlu 1 Mobil Tambahan)</td>
+                        <td className="p-3 text-stone-600">Durasi Pengantaran Subuh</td>
+                        <td className="p-3 border-l border-stone-200 text-emerald-700">✅ 2j 45m (Selesai 07:30 WIB)</td>
+                        <td className="p-3 border-l border-purple-200 text-emerald-700">✅ 2j 45m per kurir (Paralel)</td>
+                        <td className="p-3 border-l border-amber-200 text-emerald-700">✅ 2j 45m per kurir (Paralel)</td>
                       </tr>
 
                       {/* Management Conclusion Row */}
                       <tr className="bg-stone-100/70">
                         <td className="p-3 font-black text-stone-900">Rekomendasi Keputusan</td>
-                        <td className="p-3 border-l border-stone-200 text-[11px] leading-tight">
-                          <b>Pertahankan stabilitas</b> & fokus pada repeat order warga eksisting.
+                        <td className="p-3 border-l border-stone-200 text-[11px] leading-tight font-bold text-stone-900">
+                          <b>Fondasi Baku Sistem:</b> Laba Rp 8.164.000/bln sudah terbukti dan terkunci.
                         </td>
                         <td className="p-3 border-l border-purple-200 text-[11px] leading-tight font-bold text-purple-950 bg-purple-50/50">
-                          <b>SEGERA EKSEKUSI</b> begitu kuota 30 KK waitlist tercapai. Efisiensi margin tertinggi.
+                          <b>SEGERA EKSEKUSI</b> begitu kuota waitlist 30 KK Buah Batu tercapai.
                         </td>
                         <td className="p-3 border-l border-amber-200 text-[11px] leading-tight text-amber-950 bg-amber-50/50">
-                          <b>Rencana Kuartal I</b> setelah dividen dan cadangan modal armada mencukupi.
+                          <b>Rencana Kuartal I:</b> Skala 3 kurir setelah kas cadangan mencapai target.
                         </td>
                       </tr>
                     </tbody>
@@ -1605,7 +1661,7 @@ export default function AdminLaporanPage() {
               </p>
             </div>
             <span className="text-xs font-mono font-bold text-stone-600 bg-stone-200 px-2 py-1 rounded">
-              Periode 01–26 Nov 2026
+              Periode 01–26 Nov 2026 (26 Hari)
             </span>
           </div>
 
@@ -1628,7 +1684,7 @@ export default function AdminLaporanPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-2 px-3 pl-6">Pendapatan Kotor Belanja Sayur & Sembako (GMV)</td>
+                    <td className="py-2 px-3 pl-6">Pendapatan Kotor Belanja Sayur & Sembako Pokok (1.300 Order)</td>
                     <td className="py-2 px-3 text-right font-mono">{formatRupiah(gmvTotal)}</td>
                     <td className="py-2 px-3 text-right font-mono font-bold text-stone-900">
                       {formatRupiah(gmvTotal)}
@@ -1637,13 +1693,11 @@ export default function AdminLaporanPage() {
                   </tr>
                   <tr>
                     <td className="py-2 px-3 pl-6 text-stone-600">
-                      Potongan Diskon & Cashback Group-Buy Komunitas (5%)
+                      Potongan Diskon & Cashback Komunitas (Model Prepaid Lunas)
                     </td>
-                    <td className="py-2 px-3 text-right font-mono text-rose-600">
-                      ({formatRupiah(cashbackGroupBuy)})
-                    </td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-400">Rp 0</td>
                     <td className="py-2 px-3 text-right font-mono text-stone-400">—</td>
-                    <td className="py-2 px-3 text-right font-mono text-stone-500">-5.0%</td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-500">0.0%</td>
                   </tr>
                   <tr className="font-bold bg-stone-50/30">
                     <td className="py-2 px-3 pl-6 text-stone-900">Total Pendapatan Bersih (Net Revenue)</td>
@@ -1651,7 +1705,7 @@ export default function AdminLaporanPage() {
                     <td className="py-2 px-3 text-right font-mono text-stone-900 font-black">
                       {formatRupiah(netRevenue)}
                     </td>
-                    <td className="py-2 px-3 text-right font-mono text-stone-600 font-bold">95.0%</td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-600 font-bold">100.0%</td>
                   </tr>
 
                   {/* COGS Section */}
@@ -1662,19 +1716,19 @@ export default function AdminLaporanPage() {
                   </tr>
                   <tr>
                     <td className="py-2 px-3 pl-6">
-                      Belanja Modal Komoditas Petani 1P (Pakcoy, Ayam, Telur, Ubi Cilembu)
+                      Belanja Modal Komoditas Petani Hulu 1P (Sayur Daun Segar, Telur Ayam, Daging Ayam)
                     </td>
-                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(18200000)}</td>
+                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(20529600)}</td>
                     <td className="py-2 px-3 text-right font-mono text-stone-400">—</td>
-                    <td className="py-2 px-3 text-right font-mono text-stone-500">46.0%</td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-500">45.1%</td>
                   </tr>
                   <tr>
                     <td className="py-2 px-3 pl-6">
-                      Belanja Modal Komoditas Grosir 3P (Cabai, Bawang, Beras, Minyak)
+                      Belanja Modal Komoditas Grosir Induk 3P (Beras, Minyak Goreng, Bumbu Dapur)
                     </td>
-                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(10050000)}</td>
+                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(13686400)}</td>
                     <td className="py-2 px-3 text-right font-mono text-stone-400">—</td>
-                    <td className="py-2 px-3 text-right font-mono text-stone-500">25.5%</td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-500">30.1%</td>
                   </tr>
                   <tr className="font-bold bg-rose-50/30 text-rose-900">
                     <td className="py-2 px-3 pl-6">Total Beban Pokok Bahan Baku (COGS)</td>
@@ -1682,7 +1736,7 @@ export default function AdminLaporanPage() {
                     <td className="py-2 px-3 text-right font-mono font-bold">
                       ({formatRupiah(cogsHppHulu)})
                     </td>
-                    <td className="py-2 px-3 text-right font-mono">71.5%</td>
+                    <td className="py-2 px-3 text-right font-mono">75.2%</td>
                   </tr>
 
                   {/* Gross Profit */}
@@ -1698,40 +1752,40 @@ export default function AdminLaporanPage() {
                   {/* Operating Expenses */}
                   <tr className="bg-stone-50/50 font-bold">
                     <td colSpan={4} className="py-2 px-3 text-stone-900 uppercase tracking-wider text-[11px]">
-                      3. Beban Operasional Distribusi & Logistik (OpEx)
+                      3. Beban Operasional Distribusi Kurir (OpEx)
                     </td>
                   </tr>
                   <tr>
                     <td className="py-2 px-3 pl-6">
-                      Armada Mobil Pick-up Subuh (2 Klaster x 26 hari x Rp50.000)
+                      Honor Jasa Kurir Motor Subuh 3 Jam (26 hari x Rp50.000)
                     </td>
-                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(2600000)}</td>
+                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(1300000)}</td>
                     <td className="py-2 px-3 text-right font-mono text-stone-400">—</td>
-                    <td className="py-2 px-3 text-right font-mono text-stone-500">6.6%</td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-500">2.86%</td>
                   </tr>
                   <tr>
                     <td className="py-2 px-3 pl-6">
-                      Honor Mitra Rumah-Gudang Komplek (2 Klaster x 26 hari x Rp50.000)
+                      Bahan Bakar Bensin Motor Kurir (26 hari x Rp20.000)
                     </td>
-                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(2600000)}</td>
+                    <td className="py-2 px-3 text-right font-mono">{formatRupiah(520000)}</td>
                     <td className="py-2 px-3 text-right font-mono text-stone-400">—</td>
-                    <td className="py-2 px-3 text-right font-mono text-stone-500">6.6%</td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-500">1.14%</td>
                   </tr>
                   <tr>
                     <td className="py-2 px-3 pl-6">
-                      Bahan Kemasan Food-Grade, Sealer, Es Gel & Operasional Central Hub
+                      Kantong Kemasan Ramah Lingkungan & Ice Gel (1.300 paket x Rp1.000)
                     </td>
                     <td className="py-2 px-3 text-right font-mono">{formatRupiah(packagingAndOps)}</td>
                     <td className="py-2 px-3 text-right font-mono text-stone-400">—</td>
-                    <td className="py-2 px-3 text-right font-mono text-stone-500">2.9%</td>
+                    <td className="py-2 px-3 text-right font-mono text-stone-500">2.86%</td>
                   </tr>
                   <tr className="font-bold bg-amber-50/30 text-amber-900">
-                    <td className="py-2 px-3 pl-6">Total Beban Operasional Logistik (OpEx)</td>
+                    <td className="py-2 px-3 pl-6">Total Beban Operasional Distribusi (OpEx)</td>
                     <td className="py-2 px-3 text-right font-mono">—</td>
                     <td className="py-2 px-3 text-right font-mono font-bold">
                       ({formatRupiah(totalLogisticsBeban + packagingAndOps)})
                     </td>
-                    <td className="py-2 px-3 text-right font-mono">16.1%</td>
+                    <td className="py-2 px-3 text-right font-mono">6.86%</td>
                   </tr>
 
                   {/* Final Net Operating Income */}
@@ -1744,7 +1798,7 @@ export default function AdminLaporanPage() {
                       {formatRupiah(netOperatingIncome)}
                     </td>
                     <td className="py-3 px-3 text-right font-mono font-black text-emerald-800 text-sm">
-                      7.5%
+                      17.94%
                     </td>
                   </tr>
                 </tbody>
@@ -1761,7 +1815,7 @@ export default function AdminLaporanPage() {
                 Evaluasi Kinerja & Margin Laba per Klaster Perumahan
               </h2>
               <p className="text-xs text-stone-500">
-                Membandingkan profitabilitas antar komplek perumahan aktif:
+                Membandingkan profitabilitas 5 komplek perumahan aktif Bandung Timur (10 order/hari per komplek):
               </p>
             </div>
           </div>
@@ -1773,9 +1827,9 @@ export default function AdminLaporanPage() {
                   <th className="py-3 px-4">Nama Komplek & Status</th>
                   <th className="py-3 px-3 text-center">Volume Pesanan</th>
                   <th className="py-3 px-3 text-right">Omzet (GMV)</th>
-                  <th className="py-3 px-3 text-right">HPP Petani</th>
-                  <th className="py-3 px-3 text-right">Laba Kotor</th>
-                  <th className="py-3 px-3 text-right">Beban Logistik</th>
+                  <th className="py-3 px-3 text-right">HPP Pasokan (75.2%)</th>
+                  <th className="py-3 px-3 text-right">Laba Kotor (24.8%)</th>
+                  <th className="py-3 px-3 text-right">Beban Kurir Proporsional</th>
                   <th className="py-3 px-4 text-right">Laba Bersih Komplek</th>
                 </tr>
               </thead>
