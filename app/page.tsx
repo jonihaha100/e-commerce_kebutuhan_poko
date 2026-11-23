@@ -4,7 +4,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { initialProducts, initialCatalogPrices, Product, DailyCatalogPrice } from '@/lib/mock-data';
+import {
+  initialProducts,
+  initialCatalogPrices,
+  Product,
+  DailyCatalogPrice,
+  PRODUCT_PRICE_TRENDS,
+  ProductPriceTrendInsight,
+} from '@/lib/mock-data';
 import { formatRupiah } from '@/lib/pricing-engine';
 import {
   MapPin,
@@ -34,6 +41,8 @@ import {
   ChefHat,
   Sparkle,
   Info,
+  Globe,
+  Building2,
 } from 'lucide-react';
 
 import { PromoBannerSlider } from '@/components/PromoBannerSlider';
@@ -247,9 +256,9 @@ export default function StorefrontHomePage() {
   // Share WA Toast feedback
   const [shareFeedback, setShareFeedback] = useState(false);
 
-  // Product Detail Modal state (layman-friendly interactive details)
+  // Product Detail Modal state (layman-friendly interactive details & 7-day price trends)
   const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
-  const [detailActiveTab, setDetailActiveTab] = useState<'info' | 'storage' | 'recipes'>('info');
+  const [detailActiveTab, setDetailActiveTab] = useState<'trend' | 'info' | 'storage' | 'recipes'>('trend');
 
   const categories = [
     { id: 'ALL', label: 'Semua Produk', icon: '🧺' },
@@ -557,10 +566,10 @@ export default function StorefrontHomePage() {
                 key={product.id}
                 onClick={() => {
                   setSelectedProductDetail(product);
-                  setDetailActiveTab('info');
+                  setDetailActiveTab('trend');
                 }}
                 className="astro-card p-3 sm:p-4 flex flex-col justify-between group hover:border-[#24B05A] transition-all bg-white cursor-pointer relative hover:shadow-md"
-                title="Klik untuk melihat deskripsi detail, resep, dan tips penyimpanan"
+                title="Klik untuk melihat grafik tren harga 7 hari, resep, dan edukasi pasar"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-1">
@@ -574,9 +583,33 @@ export default function StorefrontHomePage() {
                       {product.is_1p ? '🌱 Panen Segar' : '🏬 Pangan Pokok'}
                     </span>
 
-                    <span className="text-[9px] font-bold text-slate-400">
-                      Subuh 03.00
-                    </span>
+                    {/* Dynamic Real-Time Price Trend Badge */}
+                    {(() => {
+                      const trend = PRODUCT_PRICE_TRENDS[product.sku];
+                      const activeSignal = catalogPriceEntry?.signal_type || trend?.signal || 'STABLE';
+                      if (activeSignal === 'PRICE_DROP') {
+                        return (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                            <TrendingDown className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                            <span>Turun {trend?.changePct ? `${Math.abs(trend.changePct)}%` : 'Hemat'}</span>
+                          </span>
+                        );
+                      }
+                      if (activeSignal === 'SUPPLY_TIGHT') {
+                        return (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">
+                            <TrendingUp className="w-3 h-3 text-rose-600 flex-shrink-0" />
+                            <span>Naik +{trend?.changePct || 12}%</span>
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span>Stabil</span>
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   {/* Visual Badge Icon */}
@@ -591,7 +624,7 @@ export default function StorefrontHomePage() {
                     <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                       <span>Pilihan takaran:</span>
                       <span className="text-[#24B05A] font-bold group-hover:underline flex items-center gap-0.5">
-                        Info Detail &rarr;
+                        📈 Grafik 7 Hari &rarr;
                       </span>
                     </div>
                   </div>
@@ -728,6 +761,8 @@ export default function StorefrontHomePage() {
         ];
         const selectedIdx = selectedPortions[detailProduct.id] || 0;
         const currentPortion = portionList[selectedIdx] || portionList[0];
+        const trendInsight = PRODUCT_PRICE_TRENDS[detailProduct.sku];
+        const activeSignal = catalogPriceEntry?.signal_type || trendInsight?.signal || 'STABLE';
         const extra = PRODUCT_EXTRA_DETAILS[detailProduct.sku] || {
           storageTips: 'Simpan di tempat sejuk atau bagian bawah kulkas agar kesegaran alaminya tetap terjaga.',
           shelfLife: 'Tahan 3-5 hari dalam suhu dingin.',
@@ -853,9 +888,39 @@ export default function StorefrontHomePage() {
                   </div>
                 </div>
 
-                {/* 3 Interactive Information Tabs (Educational & Practical Kitchen Info) */}
+                {/* 4 Interactive Information Tabs (Educational Kitchen Info & 7-Day Real-Time Price Trend) */}
                 <div className="space-y-3">
-                  <div className="flex border-b border-slate-200 text-xs font-bold gap-2 overflow-x-auto">
+                  <div className="flex border-b border-slate-200 text-xs font-bold gap-2 overflow-x-auto pb-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setDetailActiveTab('trend')}
+                      className={`pb-2.5 px-3 flex items-center gap-1.5 border-b-2 transition whitespace-nowrap cursor-pointer ${
+                        detailActiveTab === 'trend'
+                          ? 'border-[#24B05A] text-[#24B05A]'
+                          : 'border-transparent text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      <span className="flex items-center gap-1.5">
+                        Tren Harga 7 Hari
+                        {activeSignal === 'PRICE_DROP' && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            📉 Turun
+                          </span>
+                        )}
+                        {activeSignal === 'SUPPLY_TIGHT' && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-300">
+                            📈 Naik
+                          </span>
+                        )}
+                        {activeSignal === 'STABLE' && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600">
+                            ↔️ Stabil
+                          </span>
+                        )}
+                      </span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setDetailActiveTab('info')}
@@ -895,6 +960,191 @@ export default function StorefrontHomePage() {
                       <span>Ide Masakan</span>
                     </button>
                   </div>
+
+                  {/* Tab 0: Tren Harga 7 Hari & Edukasi Pasar Real-Time (2 Sumber Data) */}
+                  {detailActiveTab === 'trend' && (
+                    <div className="space-y-3">
+                      {/* Price Signal Banner */}
+                      <div
+                        className={`p-3.5 rounded-2xl border text-xs flex items-start gap-2.5 ${
+                          activeSignal === 'PRICE_DROP'
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                            : activeSignal === 'SUPPLY_TIGHT'
+                            ? 'bg-rose-50 border-rose-200 text-rose-950'
+                            : 'bg-slate-50 border-slate-200 text-slate-800'
+                        }`}
+                      >
+                        {activeSignal === 'PRICE_DROP' && (
+                          <TrendingDown className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        )}
+                        {activeSignal === 'SUPPLY_TIGHT' && (
+                          <TrendingUp className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                        )}
+                        {activeSignal === 'STABLE' && (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        )}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-xs">
+                              {activeSignal === 'PRICE_DROP' && `📉 Sinyal: Lagi Turun Hemat ${trendInsight?.changePct ? `${Math.abs(trendInsight.changePct)}%` : 'Harga Terbaik'}`}
+                              {activeSignal === 'SUPPLY_TIGHT' && `📈 Sinyal: Tren Kenaikan Pasokan (+${trendInsight?.changePct || 12}%)`}
+                              {activeSignal === 'STABLE' && '↔️ Sinyal: Harga Terjaga Stabil'}
+                            </span>
+                            <span className="text-[9px] font-black px-1.5 py-0.5 bg-white/80 rounded-md border border-black/10">
+                              Real-Time Mitra & Bapanas
+                            </span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed opacity-90">
+                            {activeSignal === 'PRICE_DROP' && 'Pasokan panen sedang melimpah dari sentra mitra hulu, momen terbaik untuk belanja dapur hemat bagi keluarga.'}
+                            {activeSignal === 'SUPPLY_TIGHT' && 'Pasokan sedang ketat di sentra kebun akibat musim hujan. Manfaatkan opsi takaran hemat agar pengeluaran dapur tetap terkendali.'}
+                            {activeSignal === 'STABLE' && 'Harga dan pasokan harian stabil terdistribusi langsung dari kebun ke komplek tanpa lonjakan spekulan pasar.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 7-Day Visual Comparative Chart */}
+                      <div className="p-3.5 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                            <TrendingUp className="w-4 h-4 text-[#24B05A]" />
+                            Perkembangan 7 Hari vs Pasar Tradisional:
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-semibold">
+                            Kemasan {detailProduct.unit}
+                          </span>
+                        </div>
+
+                        {/* 7-Day Day Columns */}
+                        <div className="grid grid-cols-7 gap-1 sm:gap-1.5 pt-1">
+                          {(trendInsight?.history7d || []).map((pt, idx) => {
+                            const isToday = idx === (trendInsight?.history7d.length || 0) - 1;
+                            return (
+                              <div
+                                key={idx}
+                                className={`p-1.5 rounded-xl text-center flex flex-col justify-between border transition ${
+                                  isToday
+                                    ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-300 shadow-2xs'
+                                    : 'bg-white border-slate-200/90'
+                                }`}
+                              >
+                                <span className={`text-[10px] font-black ${isToday ? 'text-emerald-800' : 'text-slate-600'}`}>
+                                  {pt.dayName}
+                                </span>
+                                <span className="text-[8px] text-slate-400 mb-1">
+                                  {pt.date}
+                                </span>
+                                <div className="space-y-0.5 my-0.5">
+                                  <div className="text-[10px] sm:text-[11px] font-black text-[#24B05A]">
+                                    {(pt.sellPrice / 1000).toFixed(0)}k
+                                  </div>
+                                  <div className="text-[8px] text-slate-400 line-through">
+                                    {(pt.marketPrice / 1000).toFixed(0)}k
+                                  </div>
+                                </div>
+                                {isToday ? (
+                                  <span className="text-[7px] sm:text-[8px] font-black text-emerald-800 bg-emerald-200/80 rounded py-0.5 px-0.5 mt-0.5">
+                                    Hari Ini
+                                  </span>
+                                ) : (
+                                  <span className="text-[7px] text-emerald-600 font-bold mt-0.5">
+                                    -{(100 - (pt.sellPrice / pt.marketPrice) * 100).toFixed(0)}%
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1.5 border-t border-slate-200/60">
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1 font-bold text-emerald-700">
+                              <span className="w-2 h-2 rounded-full bg-[#24B05A]" />
+                              Harga Agrojaya
+                            </span>
+                            <span className="flex items-center gap-1 font-medium text-slate-400">
+                              <span className="w-2 h-2 rounded-full bg-slate-300" />
+                              Acuan Pasar Basah (Bapanas)
+                            </span>
+                          </div>
+                          <span className="font-extrabold text-[#24B05A]">
+                            ✓ Bebas Spekulan
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 2 Sumber Data Penentuan Harga Riil */}
+                      <div className="p-3.5 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                        <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-sky-600" />
+                          Transparansi 2 Sumber Data Kami:
+                        </span>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          {/* Sumber 1: Internet Bapanas */}
+                          <div className="p-2.5 bg-sky-50/70 border border-sky-100 rounded-xl space-y-1">
+                            <div className="flex items-center gap-1.5 text-sky-900 font-extrabold text-[11px]">
+                              <Globe className="w-3.5 h-3.5 text-sky-600 flex-shrink-0" />
+                              <span>Sumber 1: Internet Bapanas Jabar</span>
+                            </div>
+                            <p className="text-[11px] text-slate-700 font-medium">
+                              {trendInsight?.source1Internet || 'Bapanas Kota Bandung & PIHPS Jawa Barat'}
+                            </p>
+                            <span className="text-[9px] text-sky-700 leading-snug block">
+                              Data acuan harga pasar basah resmi pemerintah agar belanja warga terjamin lebih hemat.
+                            </span>
+                          </div>
+
+                          {/* Sumber 2: Mitra Petani Hulu */}
+                          <div className="p-2.5 bg-emerald-50/70 border border-emerald-100 rounded-xl space-y-1">
+                            <div className="flex items-center gap-1.5 text-emerald-900 font-extrabold text-[11px]">
+                              <Building2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                              <span>Sumber 2: Mitra Hulu Terverifikasi</span>
+                            </div>
+                            <p className="text-[11px] text-slate-700 font-medium">
+                              {trendInsight?.source2Supplier || 'Kelompok Tani Mitra Ciwidey / Lembang'}
+                            </p>
+                            <span className="text-[9px] text-emerald-700 leading-snug block">
+                              Update harga panen lelang riil langsung dari petani mitra tanpa tengkulak.
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Catatan Lapangan Kebun & Edukasi Belanja Dapur */}
+                      <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl text-xs space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Leaf className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold text-slate-900 block text-[11px]">Situasi Lapangan & Panen:</span>
+                            <span className="text-slate-600 text-[11px] leading-relaxed">
+                              {trendInsight?.marketReason || 'Pasokan panen harian dalam batas normal operasional kebun.'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-2 pt-1.5 border-t border-amber-200/60">
+                          <Sparkles className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold text-slate-900 block text-[11px]">Saran Cerdas Belanja Dapur:</span>
+                            <span className="text-slate-600 text-[11px] leading-relaxed">
+                              {trendInsight?.shopperTip || 'Pilih takaran porsi sesuai kebutuhan masak 1-2 hari agar bahan selalu segar maksimal.'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sinkronisasi Operasional 16:00 WIB Notice */}
+                      <div className="p-2.5 bg-slate-100 rounded-xl border border-slate-200 text-[10px] text-slate-600 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Terkoneksi Real-Time ke Portal Admin & Hulu</span>
+                        </span>
+                        <span className="font-semibold text-slate-700">
+                          Fiksasi Jam 16:00 WIB
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Tab 1: Kualitas & Porsi */}
                   {detailActiveTab === 'info' && (

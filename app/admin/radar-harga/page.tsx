@@ -18,6 +18,8 @@ import {
   initialVendorOffers,
   initialAiAlerts,
   Product,
+  DailyCatalogPrice,
+  PRODUCT_PRICE_TRENDS,
 } from '@/lib/mock-data';
 import {
   formatRupiah,
@@ -29,6 +31,7 @@ import {
 import { getJakartaTimeString, isCatalogPublishTime } from '@/lib/time';
 import {
   TrendingUp,
+  TrendingDown,
   AlertTriangle,
   Sparkles,
   ShieldCheck,
@@ -37,6 +40,8 @@ import {
   ArrowRight,
   RefreshCw,
   Info,
+  Globe,
+  Building2,
 } from 'lucide-react';
 import { AdminHeader } from '@/components/AdminHeader';
 import { useApp } from '@/context/AppContext';
@@ -54,8 +59,12 @@ export default function RadarHargaAdminPage() {
   const currentPriceEntry = catalogPrices.find((cp) => cp.product_id === currentProduct.id);
 
   // Form edit price state
+  const currentTrendMeta = PRODUCT_PRICE_TRENDS[currentProduct.sku];
   const [customSellPrice, setCustomSellPrice] = useState(
     currentPriceEntry?.sell_price_idr || 18000
+  );
+  const [selectedSignal, setSelectedSignal] = useState<DailyCatalogPrice['signal_type']>(
+    currentPriceEntry?.signal_type || currentTrendMeta?.signal || 'STABLE'
   );
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [circuitBreakerError, setCircuitBreakerError] = useState<string | null>(null);
@@ -92,7 +101,10 @@ export default function RadarHargaAdminPage() {
   const handleSelectProduct = (productId: string) => {
     setSelectedProductId(productId);
     const priceEntry = catalogPrices.find((cp) => cp.product_id === productId);
+    const prod = products.find((p) => p.id === productId);
+    const trendMeta = PRODUCT_PRICE_TRENDS[prod?.sku || ''];
     setCustomSellPrice(priceEntry?.sell_price_idr || Math.round(latestBenchmarkPrice * 0.95));
+    setSelectedSignal(priceEntry?.signal_type || trendMeta?.signal || 'STABLE');
     setCircuitBreakerError(null);
     setAiInsight(null);
   };
@@ -149,11 +161,12 @@ export default function RadarHargaAdminPage() {
 
     setCircuitBreakerError(null);
 
-    // Sync to AppContext and storefront
+    // Sync to AppContext and storefront in real-time
     updateCatalogPrice(
       currentProduct.id,
       customSellPrice,
-      Math.round(latestBenchmarkPrice * 0.68)
+      Math.round(latestBenchmarkPrice * 0.68),
+      selectedSignal
     );
 
     setPublishSuccess(true);
@@ -282,6 +295,92 @@ export default function RadarHargaAdminPage() {
           </div>
         </div>
 
+        {/* Dual-Source Real-Time Synchronization Architecture */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/80 rounded-2xl border border-slate-200 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="text-xs font-black text-slate-900 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-emerald-600" />
+              Transparansi 2 Sumber Data Riil (Internet Bapanas + Mitra Petani Langsung)
+            </span>
+            <span className="text-[10px] font-extrabold px-2.5 py-1 bg-white rounded-full border border-slate-200 text-emerald-800 shadow-2xs self-start sm:self-auto flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Terhubung Real-Time ke Storefront User
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            {/* Sumber 1: Internet Bapanas */}
+            <div className="p-3 bg-white rounded-xl border border-sky-200/80 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-sky-900 flex items-center gap-1.5 text-xs">
+                  <Globe className="w-3.5 h-3.5 text-sky-600" />
+                  Sumber 1 (Internet)
+                </span>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-sky-100 text-sky-800 rounded">
+                  Bapanas Jabar
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                {currentTrendMeta?.source1Internet || 'Bapanas Jawa Barat & PIHPS Kota Bandung'}
+              </p>
+              <div className="pt-1 flex items-center justify-between text-[11px] font-semibold border-t border-slate-100">
+                <span className="text-slate-400">Harga Acuan:</span>
+                <span className="font-black text-sky-800">{formatRupiah(latestBenchmarkPrice)}</span>
+              </div>
+            </div>
+
+            {/* Sumber 2: Mitra Hulu Petani */}
+            <div className="p-3 bg-white rounded-xl border border-emerald-200/80 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-emerald-900 flex items-center gap-1.5 text-xs">
+                  <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Sumber 2 (Mitra Hulu)
+                </span>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded">
+                  Lelang 14:00 WIB
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                {currentTrendMeta?.source2Supplier || 'Kelompok Tani Mitra Ciwidey / Lembang'}
+              </p>
+              <div className="pt-1 flex items-center justify-between text-[11px] font-semibold border-t border-slate-100">
+                <span className="text-slate-400">Modal Riil:</span>
+                <span className="font-black text-amber-700">{formatRupiah(Math.round(latestBenchmarkPrice * 0.68))}</span>
+              </div>
+            </div>
+
+            {/* Status Sinyal Konsumen */}
+            <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs">
+                  <TrendingUp className="w-3.5 h-3.5 text-[#24B05A]" />
+                  Status Sinyal Konsumen
+                </span>
+                <span
+                  className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                    selectedSignal === 'PRICE_DROP'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : selectedSignal === 'SUPPLY_TIGHT'
+                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                      : 'bg-slate-100 text-slate-700 border border-slate-300'
+                  }`}
+                >
+                  {selectedSignal === 'PRICE_DROP' && '📉 Lagi Turun'}
+                  {selectedSignal === 'SUPPLY_TIGHT' && '📈 Tren Naik'}
+                  {selectedSignal === 'STABLE' && '↔️ Stabil'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                Terkirim langsung ke badge katalog storefront & modal edukasi belanja dapur warga.
+              </p>
+              <div className="pt-1 flex items-center justify-between text-[11px] font-semibold border-t border-slate-100">
+                <span className="text-slate-400">Toleransi Aman:</span>
+                <span className="font-black text-emerald-700">Margin Terproteksi P_min_safe</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 14-Day Line Chart */}
         <div className="h-80 w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -388,15 +487,58 @@ export default function RadarHargaAdminPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-stone-400">Harga Tetap IDR:</span>
-              <input
-                type="number"
-                value={customSellPrice}
-                onChange={(e) => setCustomSellPrice(Number(e.target.value))}
-                className="w-36 px-3 py-2 bg-stone-800 border border-stone-700 rounded-xl font-bold text-sm text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                step={100}
-              />
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Sinyal Selector */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-stone-400 font-medium">Sinyal Konsumen:</span>
+                <div className="flex bg-stone-800 p-1 rounded-xl border border-stone-700 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSignal('PRICE_DROP')}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
+                      selectedSignal === 'PRICE_DROP'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-stone-400 hover:text-white'
+                    }`}
+                  >
+                    📉 Turun
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSignal('STABLE')}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
+                      selectedSignal === 'STABLE'
+                        ? 'bg-stone-600 text-white shadow-xs'
+                        : 'text-stone-400 hover:text-white'
+                    }`}
+                  >
+                    ↔️ Stabil
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSignal('SUPPLY_TIGHT')}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
+                      selectedSignal === 'SUPPLY_TIGHT'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'text-stone-400 hover:text-white'
+                    }`}
+                  >
+                    📈 Naik
+                  </button>
+                </div>
+              </div>
+
+              {/* Price Input */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-stone-400 font-medium">Harga IDR:</span>
+                <input
+                  type="number"
+                  value={customSellPrice}
+                  onChange={(e) => setCustomSellPrice(Number(e.target.value))}
+                  className="w-32 px-3 py-2 bg-stone-800 border border-stone-700 rounded-xl font-bold text-sm text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  step={100}
+                />
+              </div>
             </div>
           </div>
 
@@ -409,7 +551,7 @@ export default function RadarHargaAdminPage() {
           {publishSuccess && (
             <div className="p-3 bg-emerald-900/80 border border-emerald-600 rounded-xl text-xs text-emerald-200 font-semibold flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Harga berhasil dikunci & dipublikasikan ke katalog storefront untuk jam 16:00 WIB!</span>
+              <span>Harga & sinyal tren berhasil dikunci & dipublikasikan langsung ke katalog storefront konsumen!</span>
             </div>
           )}
 

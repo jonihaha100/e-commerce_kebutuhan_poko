@@ -39,7 +39,12 @@ interface AppContextType {
 
   // Catalog Prices
   catalogPrices: DailyCatalogPrice[];
-  updateCatalogPrice: (productId: string, newSellPrice: number, newModalPrice?: number) => void;
+  updateCatalogPrice: (
+    productId: string,
+    newSellPrice: number,
+    newModalPrice?: number,
+    newSignal?: DailyCatalogPrice['signal_type']
+  ) => void;
 
   // Orders Management
   orders: Order[];
@@ -241,16 +246,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateCatalogPrice = (productId: string, newSellPrice: number, newModalPrice?: number) => {
+  const updateCatalogPrice = (
+    productId: string,
+    newSellPrice: number,
+    newModalPrice?: number,
+    newSignal?: DailyCatalogPrice['signal_type']
+  ) => {
     setCatalogPrices((prev) => {
       const updated = prev.map((cp) => {
         if (cp.product_id === productId) {
           const farmerSplit = newModalPrice !== undefined ? newModalPrice : cp.farmer_split_idr;
+          let computedSignal: DailyCatalogPrice['signal_type'] = newSignal || cp.signal_type;
+
+          if (!newSignal) {
+            // Dynamically adjust signal if sell price deviates by more than 3%
+            if (newSellPrice < cp.sell_price_idr * 0.97) {
+              computedSignal = 'PRICE_DROP';
+            } else if (newSellPrice > cp.sell_price_idr * 1.03) {
+              computedSignal = 'SUPPLY_TIGHT';
+            } else {
+              computedSignal = 'STABLE';
+            }
+          }
+
           return {
             ...cp,
             sell_price_idr: newSellPrice,
             farmer_split_idr: farmerSplit,
             ops_split_idr: newSellPrice - farmerSplit,
+            signal_type: computedSignal,
+            published_at: new Date().toISOString(),
           };
         }
         return cp;
