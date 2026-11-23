@@ -156,6 +156,36 @@ export const initialClusters: Cluster[] = [
   },
   {
     id: 'c3333333-3333-3333-3333-333333333333',
+    name: 'Cisaranten Kulon Asri',
+    qr_slug: 'cisaranten-kulon-asri',
+    status: 'ACTIVE',
+    delivery_mode: 'MOBILE_DROP_POINT',
+    waitlist_count: 0,
+    waitlist_target: 5,
+    address_notes: 'Pos Keamanan Gerbang Timur / Jl. Cisaranten Baru No. 8',
+  },
+  {
+    id: 'c4444444-4444-4444-4444-444444444444',
+    name: 'Guruminda Megah',
+    qr_slug: 'guruminda-megah',
+    status: 'ACTIVE',
+    delivery_mode: 'MITRA_IRT_CHECKPOINT',
+    waitlist_count: 0,
+    waitlist_target: 5,
+    address_notes: 'Teras Mitra IRT Bu Hj. Lilis, Jl. Megah Utama Blok H No. 5',
+  },
+  {
+    id: 'c5555555-5555-5555-5555-555555555555',
+    name: 'Riung Bandung Permai',
+    qr_slug: 'riung-bandung-permai',
+    status: 'ACTIVE',
+    delivery_mode: 'MOBILE_DROP_POINT',
+    waitlist_count: 0,
+    waitlist_target: 5,
+    address_notes: 'Pos RW 08 / Balai Warga Jl. Riung Saluyu Raya',
+  },
+  {
+    id: 'c6666666-6666-6666-6666-666666666666',
     name: 'Buah Batu Regency',
     qr_slug: 'buah-batu-regency',
     status: 'WAITLIST',
@@ -946,5 +976,152 @@ export const initialOrders: Order[] = [
     cashback_amount_idr: 0,
     delivery_slot: 'Besok 06.00 - 09.00 WIB',
     created_at: '2026-11-22T18:25:00+07:00',
+  },
+];
+
+// -----------------------------------------------------------------------------
+// COURIER 3-HOUR SHIFT DISPATCH ARCHITECTURE (50 ORDERS / 5 CLUSTERS)
+// -----------------------------------------------------------------------------
+
+export interface DispatchOrderItem {
+  seq: number;
+  orderNumber: string;
+  customerName: string;
+  phone: string;
+  houseAddress: string;
+  itemsSummary: string;
+  totalPriceIdr: number;
+  paymentStatus: 'PAID' | 'COD';
+  dropInstruction: string;
+}
+
+export interface DispatchRouteStop {
+  stopNumber: number;
+  clusterId: string;
+  clusterName: string;
+  dropPointNote: string;
+  targetArrival: string;
+  targetDeparture: string;
+  durationMinutes: number;
+  totalOrders: number;
+  totalWeightKg: number;
+  orders: DispatchOrderItem[];
+}
+
+export const COURIER_5_CLUSTERS_DISPATCH: DispatchRouteStop[] = [
+  {
+    stopNumber: 1,
+    clusterId: 'c1111111-1111-1111-1111-111111111111',
+    clusterName: 'Antapani Indah',
+    dropPointNote: 'Pos Satpam Blok C / Gerbang Utama Jl. Antapani',
+    targetArrival: '04:55 WIB',
+    targetDeparture: '05:20 WIB',
+    durationMinutes: 25,
+    totalOrders: 10,
+    totalWeightKg: 13.2,
+    orders: [
+      { seq: 1, orderNumber: 'ORD-892101', customerName: 'Ibu Ratna Kumala', phone: '08122341001', houseAddress: 'Blok A1 No. 04', itemsSummary: 'Pakcoy (250g), Telur (1/2kg), Cabai Rawit (200g)', totalPriceIdr: 31600, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar depan' },
+      { seq: 2, orderNumber: 'ORD-892102', customerName: 'Pak Bambang S.', phone: '08122341002', houseAddress: 'Blok A1 No. 09', itemsSummary: 'Beras Pandanwangi (5kg), Minyak Pouch 2L', totalPriceIdr: 112000, paymentStatus: 'PAID', dropInstruction: 'Teras dekat pot bunga' },
+      { seq: 3, orderNumber: 'ORD-892103', customerName: 'Ibu Dewi Sartika', phone: '08122341003', houseAddress: 'Blok A2 No. 12', itemsSummary: 'Ayam Filet (500g), Sosin (250g), Bawang Merah (250g)', totalPriceIdr: 31000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 4, orderNumber: 'ORD-892104', customerName: 'Ibu Yuliana', phone: '08122341004', houseAddress: 'Blok B1 No. 03', itemsSummary: 'Kangkung (300g), Tempe, Cabai Rawit (200g)', totalPriceIdr: 22000, paymentStatus: 'PAID', dropInstruction: 'Titip di pos satpam' },
+      { seq: 5, orderNumber: 'ORD-892105', customerName: 'Pak Hendra Gunawan', phone: '08122341005', houseAddress: 'Blok B1 No. 08', itemsSummary: 'Ubi Cilembu (1kg), Telur (1kg)', totalPriceIdr: 44000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar samping' },
+      { seq: 6, orderNumber: 'ORD-892106', customerName: 'Ibu Rina Marlina', phone: '08122341006', houseAddress: 'Blok B2 No. 15', itemsSummary: 'Pakcoy (500g), Ayam Filet (500g)', totalPriceIdr: 30500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 7, orderNumber: 'ORD-892107', customerName: 'Ibu Siti Aminah', phone: '08122341007', houseAddress: 'Blok C1 No. 02', itemsSummary: 'Bawang Merah (500g), Cabai Rawit (500g)', totalPriceIdr: 37500, paymentStatus: 'PAID', dropInstruction: 'Teras depan pintu' },
+      { seq: 8, orderNumber: 'ORD-892108', customerName: 'Pak Agus Salim', phone: '08122341008', houseAddress: 'Blok C1 No. 07', itemsSummary: 'Beras Pandanwangi (5kg)', totalPriceIdr: 78000, paymentStatus: 'PAID', dropInstruction: 'Titip pos satpam' },
+      { seq: 9, orderNumber: 'ORD-892109', customerName: 'Ibu Fitriani', phone: '08122341009', houseAddress: 'Blok C2 No. 11', itemsSummary: 'Sosin (500g), Kangkung (600g), Telur (1/2kg)', totalPriceIdr: 30000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 10, orderNumber: 'ORD-892110', customerName: 'Ibu Nenden', phone: '08122341010', houseAddress: 'Blok C2 No. 18', itemsSummary: 'Minyak Pouch 2L, Telur (1/2kg)', totalPriceIdr: 49000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar depan' },
+    ],
+  },
+  {
+    stopNumber: 2,
+    clusterId: 'c2222222-2222-2222-2222-222222222222',
+    clusterName: 'Arcamanik Endah',
+    dropPointNote: 'Rumah Bu RT 04 (Mitra IRT), Jl. Pesona Arcamanik No. 12',
+    targetArrival: '05:25 WIB',
+    targetDeparture: '05:50 WIB',
+    durationMinutes: 25,
+    totalOrders: 10,
+    totalWeightKg: 12.8,
+    orders: [
+      { seq: 11, orderNumber: 'ORD-892201', customerName: 'Ibu Nurhayati (RT)', phone: '08122342001', houseAddress: 'Jl. Pesona Blok D1 No. 12', itemsSummary: 'Beras (5kg), Ayam Filet (1kg)', totalPriceIdr: 110000, paymentStatus: 'PAID', dropInstruction: 'Teras pos mitra IRT' },
+      { seq: 12, orderNumber: 'ORD-892202', customerName: 'Ibu Maya Pratiwi', phone: '08122342002', houseAddress: 'Jl. Pesona Blok D1 No. 05', itemsSummary: 'Pakcoy (250g), Sosin (250g), Telur (1/2kg)', totalPriceIdr: 27600, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 13, orderNumber: 'ORD-892203', customerName: 'Pak Denny Cahya', phone: '08122342003', houseAddress: 'Jl. Pesona Blok D2 No. 08', itemsSummary: 'Ayam Filet (500g), Bawang Merah (250g)', totalPriceIdr: 26000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 14, orderNumber: 'ORD-892204', customerName: 'Ibu Sri Wahyuni', phone: '08122342004', houseAddress: 'Jl. Pesona Blok D2 No. 14', itemsSummary: 'Ubi Cilembu (1kg), Minyak 2L', totalPriceIdr: 43000, paymentStatus: 'PAID', dropInstruction: 'Teras dekat garasi' },
+      { seq: 15, orderNumber: 'ORD-892205', customerName: 'Ibu Eka Rahayu', phone: '08122342005', houseAddress: 'Jl. Pesona Blok D3 No. 02', itemsSummary: 'Cabai Rawit (200g), Kangkung (300g)', totalPriceIdr: 14000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 16, orderNumber: 'ORD-892206', customerName: 'Pak Ridwan Kamil', phone: '08122342006', houseAddress: 'Jl. Pesona Blok D3 No. 09', itemsSummary: 'Telur (1kg), Ayam Filet (500g)', totalPriceIdr: 46500, paymentStatus: 'PAID', dropInstruction: 'Teras depan pintu' },
+      { seq: 17, orderNumber: 'ORD-892207', customerName: 'Ibu Dian Sastro', phone: '08122342007', houseAddress: 'Jl. Pesona Blok D4 No. 04', itemsSummary: 'Pakcoy (250g), Bawang Merah (500g)', totalPriceIdr: 27100, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 18, orderNumber: 'ORD-892208', customerName: 'Pak Taufik Hidayat', phone: '08122342008', houseAddress: 'Jl. Pesona Blok D4 No. 11', itemsSummary: 'Beras Pandanwangi (5kg)', totalPriceIdr: 78000, paymentStatus: 'PAID', dropInstruction: 'Titip pos Bu RT' },
+      { seq: 19, orderNumber: 'ORD-892209', customerName: 'Ibu Mega Utami', phone: '08122342009', houseAddress: 'Jl. Pesona Blok D5 No. 06', itemsSummary: 'Sosin (500g), Cabai Rawit (200g)', totalPriceIdr: 19000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 20, orderNumber: 'ORD-892210', customerName: 'Ibu Anita Zahra', phone: '08122342010', houseAddress: 'Jl. Pesona Blok D5 No. 17', itemsSummary: 'Minyak 2L, Telur (1/2kg), Kangkung (300g)', totalPriceIdr: 54000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar depan' },
+    ],
+  },
+  {
+    stopNumber: 3,
+    clusterId: 'c3333333-3333-3333-3333-333333333333',
+    clusterName: 'Cisaranten Kulon Asri',
+    dropPointNote: 'Pos Keamanan Gerbang Timur / Jl. Cisaranten Baru No. 8',
+    targetArrival: '05:55 WIB',
+    targetDeparture: '06:20 WIB',
+    durationMinutes: 25,
+    totalOrders: 10,
+    totalWeightKg: 13.5,
+    orders: [
+      { seq: 21, orderNumber: 'ORD-892301', customerName: 'Ibu Mira Lesmana', phone: '08122343001', houseAddress: 'Blok E1 No. 03', itemsSummary: 'Pakcoy (500g), Telur (1/2kg), Cabai (200g)', totalPriceIdr: 39000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 22, orderNumber: 'ORD-892302', customerName: 'Pak Dedi Mulyadi', phone: '08122343002', houseAddress: 'Blok E1 No. 10', itemsSummary: 'Beras (5kg), Bawang Merah (250g)', totalPriceIdr: 87500, paymentStatus: 'PAID', dropInstruction: 'Titip di pos jaga' },
+      { seq: 23, orderNumber: 'ORD-892303', customerName: 'Ibu Ratih Pradita', phone: '08122343003', houseAddress: 'Blok E2 No. 07', itemsSummary: 'Ayam Filet (500g), Sosin (250g)', totalPriceIdr: 21500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 24, orderNumber: 'ORD-892304', customerName: 'Pak Irfan Hakim', phone: '08122343004', houseAddress: 'Blok E2 No. 15', itemsSummary: 'Minyak Pouch 2L, Kangkung (300g)', totalPriceIdr: 39000, paymentStatus: 'PAID', dropInstruction: 'Teras depan rumah' },
+      { seq: 25, orderNumber: 'ORD-892305', customerName: 'Ibu Kartika Sari', phone: '08122343005', houseAddress: 'Blok F1 No. 02', itemsSummary: 'Ubi Cilembu (1kg), Telur (1/2kg)', totalPriceIdr: 24000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 26, orderNumber: 'ORD-892306', customerName: 'Ibu Intan Permata', phone: '08122343006', houseAddress: 'Blok F1 No. 08', itemsSummary: 'Pakcoy (250g), Cabai Rawit (200g)', totalPriceIdr: 16600, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar samping' },
+      { seq: 27, orderNumber: 'ORD-892307', customerName: 'Pak Gunawan Wibowo', phone: '08122343007', houseAddress: 'Blok F2 No. 05', itemsSummary: 'Ayam Filet (500g), Telur (1/2kg)', totalPriceIdr: 31500, paymentStatus: 'PAID', dropInstruction: 'Teras depan pintu' },
+      { seq: 28, orderNumber: 'ORD-892308', customerName: 'Ibu Siska Amelia', phone: '08122343008', houseAddress: 'Blok F2 No. 12', itemsSummary: 'Bawang Merah (500g), Sosin (250g)', totalPriceIdr: 24500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 29, orderNumber: 'ORD-892309', customerName: 'Pak Wahyu Hidayat', phone: '08122343009', houseAddress: 'Blok F3 No. 04', itemsSummary: 'Beras Pandanwangi (5kg)', totalPriceIdr: 78000, paymentStatus: 'PAID', dropInstruction: 'Titip pos timur' },
+      { seq: 30, orderNumber: 'ORD-892310', customerName: 'Ibu Halimah', phone: '08122343010', houseAddress: 'Blok F3 No. 11', itemsSummary: 'Kangkung (600g), Cabai Rawit (200g), Telur (1/2kg)', totalPriceIdr: 33000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar depan' },
+    ],
+  },
+  {
+    stopNumber: 4,
+    clusterId: 'c4444444-4444-4444-4444-444444444444',
+    clusterName: 'Guruminda Megah',
+    dropPointNote: 'Teras Mitra IRT Bu Hj. Lilis, Jl. Megah Utama Blok H No. 5',
+    targetArrival: '06:25 WIB',
+    targetDeparture: '06:50 WIB',
+    durationMinutes: 25,
+    totalOrders: 10,
+    totalWeightKg: 12.6,
+    orders: [
+      { seq: 31, orderNumber: 'ORD-892401', customerName: 'Bu Hj. Lilis (Mitra)', phone: '08122344001', houseAddress: 'Blok H No. 05', itemsSummary: 'Beras (5kg), Minyak 2L, Ayam Filet (1kg)', totalPriceIdr: 145000, paymentStatus: 'PAID', dropInstruction: 'Teras pos mitra IRT' },
+      { seq: 32, orderNumber: 'ORD-892402', customerName: 'Ibu Cindy Claudia', phone: '08122344002', houseAddress: 'Blok G1 No. 04', itemsSummary: 'Pakcoy (250g), Sosin (250g)', totalPriceIdr: 12600, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 33, orderNumber: 'ORD-892403', customerName: 'Pak Aris Munandar', phone: '08122344003', houseAddress: 'Blok G1 No. 11', itemsSummary: 'Ayam Filet (500g), Telur (1/2kg)', totalPriceIdr: 31500, paymentStatus: 'PAID', dropInstruction: 'Teras depan garasi' },
+      { seq: 34, orderNumber: 'ORD-892404', customerName: 'Ibu Poppy Sovia', phone: '08122344004', houseAddress: 'Blok G2 No. 06', itemsSummary: 'Cabai Rawit (200g), Bawang Merah (250g)', totalPriceIdr: 18500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 35, orderNumber: 'ORD-892405', customerName: 'Pak Fajar Siddiq', phone: '08122344005', houseAddress: 'Blok G2 No. 15', itemsSummary: 'Ubi Cilembu (1kg), Kangkung (300g)', totalPriceIdr: 14000, paymentStatus: 'PAID', dropInstruction: 'Titip Bu Hj. Lilis' },
+      { seq: 36, orderNumber: 'ORD-892406', customerName: 'Ibu Heni Hendriani', phone: '08122344006', houseAddress: 'Blok H No. 02', itemsSummary: 'Minyak Pouch 2L, Telur (1/2kg)', totalPriceIdr: 49000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 37, orderNumber: 'ORD-892407', customerName: 'Ibu Wulan Guritno', phone: '08122344007', houseAddress: 'Blok H No. 09', itemsSummary: 'Pakcoy (250g), Kangkung (300g), Sosin (250g)', totalPriceIdr: 17600, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar samping' },
+      { seq: 38, orderNumber: 'ORD-892408', customerName: 'Pak Budi Hartono', phone: '08122344008', houseAddress: 'Blok H No. 14', itemsSummary: 'Beras Pandanwangi (5kg)', totalPriceIdr: 78000, paymentStatus: 'PAID', dropInstruction: 'Teras depan pintu' },
+      { seq: 39, orderNumber: 'ORD-892409', customerName: 'Ibu Desi Ratnasari', phone: '08122344009', houseAddress: 'Blok H No. 19', itemsSummary: 'Ayam Filet (500g), Cabai Rawit (200g)', totalPriceIdr: 25500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 40, orderNumber: 'ORD-892410', customerName: 'Ibu Fenny Rose', phone: '08122344010', houseAddress: 'Blok H No. 23', itemsSummary: 'Telur (1kg), Bawang Merah (250g)', totalPriceIdr: 39500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar depan' },
+    ],
+  },
+  {
+    stopNumber: 5,
+    clusterId: 'c5555555-5555-5555-5555-555555555555',
+    clusterName: 'Riung Bandung Permai',
+    dropPointNote: 'Pos RW 08 / Balai Warga Jl. Riung Saluyu Raya',
+    targetArrival: '06:55 WIB',
+    targetDeparture: '07:20 WIB',
+    durationMinutes: 25,
+    totalOrders: 10,
+    totalWeightKg: 13.0,
+    orders: [
+      { seq: 41, orderNumber: 'ORD-892501', customerName: 'Pak Ketua RW 08', phone: '08122345001', houseAddress: 'Jl. Riung Saluyu Blok J1 No. 01', itemsSummary: 'Beras (5kg), Minyak 2L, Telur (1kg)', totalPriceIdr: 142000, paymentStatus: 'PAID', dropInstruction: 'Balai RW 08' },
+      { seq: 42, orderNumber: 'ORD-892502', customerName: 'Ibu Tantri Kotak', phone: '08122345002', houseAddress: 'Jl. Riung Saluyu Blok J1 No. 08', itemsSummary: 'Pakcoy (250g), Ayam Filet (500g)', totalPriceIdr: 24100, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 43, orderNumber: 'ORD-892503', customerName: 'Pak Armand Maulana', phone: '08122345003', houseAddress: 'Jl. Riung Saluyu Blok J2 No. 05', itemsSummary: 'Kangkung (300g), Sosin (250g), Telur (1/2kg)', totalPriceIdr: 25000, paymentStatus: 'PAID', dropInstruction: 'Teras depan pintu' },
+      { seq: 44, orderNumber: 'ORD-892504', customerName: 'Ibu Raisa Andriana', phone: '08122345004', houseAddress: 'Jl. Riung Saluyu Blok J2 No. 12', itemsSummary: 'Cabai Rawit (200g), Bawang Merah (250g)', totalPriceIdr: 18500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 45, orderNumber: 'ORD-892505', customerName: 'Pak Ariel Nazril', phone: '08122345005', houseAddress: 'Jl. Riung Saluyu Blok K1 No. 03', itemsSummary: 'Ubi Cilembu (1kg), Telur (1/2kg)', totalPriceIdr: 24000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar samping' },
+      { seq: 46, orderNumber: 'ORD-892506', customerName: 'Ibu Isyana Sarasvati', phone: '08122345006', houseAddress: 'Jl. Riung Saluyu Blok K1 No. 09', itemsSummary: 'Pakcoy (500g), Ayam Filet (500g)', totalPriceIdr: 30500, paymentStatus: 'PAID', dropInstruction: 'Teras dekat bel' },
+      { seq: 47, orderNumber: 'ORD-892507', customerName: 'Ibu Rossa Roslaina', phone: '08122345007', houseAddress: 'Jl. Riung Saluyu Blok K2 No. 04', itemsSummary: 'Minyak Pouch 2L, Sosin (250g)', totalPriceIdr: 39000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 48, orderNumber: 'ORD-892508', customerName: 'Pak Judika Sihotang', phone: '08122345008', houseAddress: 'Jl. Riung Saluyu Blok K2 No. 11', itemsSummary: 'Beras Pandanwangi (5kg)', totalPriceIdr: 78000, paymentStatus: 'PAID', dropInstruction: 'Titip pos satpam RW' },
+      { seq: 49, orderNumber: 'ORD-892509', customerName: 'Ibu Lyodra Ginting', phone: '08122345009', houseAddress: 'Jl. Riung Saluyu Blok K3 No. 07', itemsSummary: 'Ayam Filet (500g), Cabai Rawit (200g)', totalPriceIdr: 25500, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar' },
+      { seq: 50, orderNumber: 'ORD-892510', customerName: 'Ibu Tiara Andini', phone: '08122345010', houseAddress: 'Jl. Riung Saluyu Blok K3 No. 16', itemsSummary: 'Kangkung (300g), Telur (1kg)', totalPriceIdr: 35000, paymentStatus: 'PAID', dropInstruction: 'Gantung di pagar depan' },
+    ],
   },
 ];

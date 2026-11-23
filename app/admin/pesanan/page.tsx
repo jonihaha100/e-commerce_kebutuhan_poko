@@ -3,7 +3,12 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { AdminHeader } from '@/components/AdminHeader';
-import { Order } from '@/lib/mock-data';
+import {
+  Order,
+  COURIER_5_CLUSTERS_DISPATCH,
+  DispatchRouteStop,
+  DispatchOrderItem,
+} from '@/lib/mock-data';
 import { formatRupiah } from '@/lib/pricing-engine';
 import {
   ShoppingBag,
@@ -28,6 +33,11 @@ import {
   TrendingUp,
   Receipt,
   ExternalLink,
+  Copy,
+  Check,
+  Navigation,
+  ClipboardList,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function AdminPesananPage() {
@@ -39,6 +49,12 @@ export default function AdminPesananPage() {
   const [manifestModalCluster, setManifestModalCluster] = useState<string | null>(null);
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(null);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+
+  // Courier Dispatch Draft State (50 orders / 5 clusters / 3-hour shift)
+  const [showCourierDraftModal, setShowCourierDraftModal] = useState(false);
+  const [selectedDispatchStop, setSelectedDispatchStop] = useState<number>(0);
+  const [isDispatchLocked, setIsDispatchLocked] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   // Filtered orders
   const filteredOrders = orders.filter((o) => {
@@ -179,6 +195,46 @@ export default function AdminPesananPage() {
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
   };
 
+  // Generate and Copy Clean Courier Dispatch WhatsApp Text
+  const handleCopyDispatchWhatsApp = () => {
+    let text = `📦 *LEMBAR JALAN RUTE KURIR SUBUH (AGROJAYA)* 📦\n`;
+    text += `📅 Tanggal: ${new Date().toLocaleDateString('id-ID', { dateStyle: 'full' })}\n`;
+    text += `⏱️ Durasi Shift: 3 Jam (04.30 - 07.30 WIB)\n`;
+    text += `🛵 Total Muatan: 50 Paket (~65,1 kg) • 5 Komplek\n`;
+    text += `💰 Alokasi Upah: Rp 70.000 (Rp 50k upah + Rp 20k bensin)\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    const stopsToInclude =
+      selectedDispatchStop === 0
+        ? COURIER_5_CLUSTERS_DISPATCH
+        : COURIER_5_CLUSTERS_DISPATCH.filter((s) => s.stopNumber === selectedDispatchStop);
+
+    stopsToInclude.forEach((stop) => {
+      text += `📍 *STOP ${stop.stopNumber}: ${stop.clusterName.toUpperCase()}* (${stop.totalOrders} Paket • ${stop.totalWeightKg} kg)\n`;
+      text += `⏰ Target Jam: ${stop.targetArrival} - ${stop.targetDeparture}\n`;
+      text += `🏢 Titik Kumpul: ${stop.dropPointNote}\n`;
+      text += `Daftar Antar Rumah:\n`;
+      stop.orders.forEach((o) => {
+        text += `  ${o.seq}. [${o.orderNumber}] ${o.customerName} - ${o.houseAddress} (${o.dropInstruction})\n`;
+        text += `     Item: ${o.itemsSummary} [Lunas]\n`;
+      });
+      text += `\n`;
+    });
+
+    text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `💡 *Instruksi Kurir:*\n`;
+    text += `1. Ambil muatan di Central Hub jam 04.30 WIB.\n`;
+    text += `2. Pastikan telur & bahan basah tidak tertindih beras.\n`;
+    text += `3. Konfirmasi di grup WhatsApp begitu 1 komplek selesai diantar.\n`;
+    text += `Hati-hati di jalan & utamakan keselamatan!`;
+
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-stone-50 pb-16">
       {/* Admin Top Header Navigation */}
@@ -219,6 +275,14 @@ export default function AdminPesananPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowCourierDraftModal(true)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
+            >
+              <Truck className="w-4 h-4" />
+              <span>Draft Rute Kurir (5 Wilayah • 50 Order)</span>
+            </button>
+
             <button
               onClick={handleExportCsv}
               className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
@@ -803,6 +867,296 @@ export default function AdminPesananPage() {
                   className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer"
                 >
                   Tutup Manifest
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DRAFT LEMBAR JALAN RUTE KURIR 3 JAM (5 WILAYAH • 50 ORDERAN) */}
+      {showCourierDraftModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl border border-stone-200 space-y-5 max-h-[92vh] overflow-y-auto animate-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200 pb-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-xs">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase tracking-wider">
+                      Shift Subuh 3 Jam (04.30 - 07.30 WIB)
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-700">
+                      50 Orderan • 5 Komplek
+                    </span>
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-black text-stone-900 mt-1 tracking-tight">
+                    Draft Lembar Jalan & Rute Pengantaran Kurir
+                  </h2>
+                  <p className="text-xs text-stone-500">
+                    Disusun rapi berdasarkan wilayah dan target jam pengantaran subuh sebagai keputusan kerja kurir.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowCourierDraftModal(false)}
+                  className="p-2 text-stone-400 hover:text-stone-700 rounded-xl hover:bg-stone-100 transition cursor-pointer"
+                  aria-label="Tutup"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Executive Summary Bar for Decision Making */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-stone-50 rounded-2xl border border-stone-200/80 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                  Total Muatan Kurir
+                </span>
+                <span className="text-base sm:text-lg font-black text-stone-900">
+                  50 Paket (65,1 kg)
+                </span>
+                <span className="text-[10px] text-emerald-700 font-semibold block">
+                  Muat 1 motor obrok samping
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                  Target Waktu Tempuh
+                </span>
+                <span className="text-base sm:text-lg font-black text-sky-800">
+                  2 Jam 45 Menit
+                </span>
+                <span className="text-[10px] text-sky-700 font-semibold block">
+                  Selesai maks. 07.20 WIB
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                  Alokasi Upah Kurir
+                </span>
+                <span className="text-base sm:text-lg font-black text-amber-800">
+                  Rp 70.000 / subuh
+                </span>
+                <span className="text-[10px] text-amber-700 font-semibold block">
+                  Rp 50k upah + Rp 20k bensin
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                  Titik Impas (BEP)
+                </span>
+                <span className="text-base sm:text-lg font-black text-emerald-700">
+                  11 Order / Hari
+                </span>
+                <span className="text-[10px] text-emerald-700 font-semibold block">
+                  39 order = Laba bersih murni
+                </span>
+              </div>
+            </div>
+
+            {/* Stop Sequence Tabs (0 = All, 1..5 = Stops) */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-stone-700 uppercase tracking-wider block">
+                Pilih Urutan Wilayah & Target Pengantaran:
+              </span>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDispatchStop(0)}
+                  className={`px-3 py-2 rounded-xl font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
+                    selectedDispatchStop === 0
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Semua 5 Wilayah (50 Order)</span>
+                </button>
+
+                {COURIER_5_CLUSTERS_DISPATCH.map((stop) => (
+                  <button
+                    key={stop.stopNumber}
+                    type="button"
+                    onClick={() => setSelectedDispatchStop(stop.stopNumber)}
+                    className={`px-3 py-2 rounded-xl font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
+                      selectedDispatchStop === stop.stopNumber
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                    }`}
+                  >
+                    <span className="w-4 h-4 rounded-full bg-white/20 text-center text-[10px] font-black leading-4">
+                      {stop.stopNumber}
+                    </span>
+                    <span>{stop.clusterName} ({stop.targetArrival})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stops Detail Section */}
+            <div className="space-y-4">
+              {(selectedDispatchStop === 0
+                ? COURIER_5_CLUSTERS_DISPATCH
+                : COURIER_5_CLUSTERS_DISPATCH.filter((s) => s.stopNumber === selectedDispatchStop)
+              ).map((stop) => (
+                <div
+                  key={stop.stopNumber}
+                  className="p-4 rounded-2xl border border-stone-200 bg-white shadow-2xs space-y-3"
+                >
+                  {/* Stop Banner */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-700 text-white font-black flex items-center justify-center text-xs">
+                        #{stop.stopNumber}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-sm text-emerald-950">
+                            {stop.clusterName}
+                          </span>
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-white text-emerald-800 border border-emerald-300">
+                            Target: {stop.targetArrival} - {stop.targetDeparture}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-emerald-800 flex items-center gap-1 mt-0.5 font-medium">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                          Pos: {stop.dropPointNote}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 sm:self-center font-mono text-xs">
+                      <span className="bg-white px-2.5 py-1 rounded-lg border border-emerald-200 font-bold text-stone-700">
+                        📦 {stop.totalOrders} Paket
+                      </span>
+                      <span className="bg-white px-2.5 py-1 rounded-lg border border-emerald-200 font-bold text-stone-700">
+                        ⚖️ {stop.totalWeightKg} kg
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Orders Table */}
+                  <div className="overflow-x-auto border border-stone-200 rounded-xl">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-stone-50 border-b border-stone-200 text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                        <tr>
+                          <th className="py-2.5 px-3">No</th>
+                          <th className="py-2.5 px-3">No Order & Pemesan</th>
+                          <th className="py-2.5 px-3">Alamat Rumah (Blok/No)</th>
+                          <th className="py-2.5 px-3">Daftar Belanjaan Sayur & Sembako</th>
+                          <th className="py-2.5 px-3">Instruksi Taruh</th>
+                          <th className="py-2.5 px-3 text-right">Status Bayar</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100 text-stone-700">
+                        {stop.orders.map((o) => (
+                          <tr key={o.orderNumber} className="hover:bg-stone-50/60 transition">
+                            <td className="py-2.5 px-3 font-mono font-bold text-stone-400">
+                              {o.seq}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className="font-bold text-stone-900 block">{o.customerName}</span>
+                              <span className="text-[10px] font-mono text-stone-400">{o.orderNumber} • {o.phone}</span>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 inline-block">
+                                {o.houseAddress}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-stone-600 max-w-xs">
+                              {o.itemsSummary}
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] font-medium text-amber-800">
+                              {o.dropInstruction}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-bold text-emerald-700">
+                              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md text-[10px]">
+                                <Check className="w-3 h-3" />
+                                {formatRupiah(o.totalPriceIdr)} (Lunas)
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Decision & Action Bar */}
+            <div className="pt-3 border-t border-stone-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-stone-50 p-4 rounded-2xl">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <div>
+                  <span className="text-xs font-bold text-stone-900 block">
+                    {isDispatchLocked
+                      ? '🔒 Draft Rute Telah Disahkan & Dikunci untuk Kurir'
+                      : '📝 Status: Draft Lembar Jalan Siap Diambil Keputusan'}
+                  </span>
+                  <span className="text-[11px] text-stone-500">
+                    Sistem siap mengekspor teks instruksi ke WhatsApp kurir atau mencetak tanda terima.
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleCopyDispatchWhatsApp}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-xs"
+                >
+                  {copyFeedback ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Format WA Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Salin Format WhatsApp Kurir</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 text-xs font-bold rounded-xl transition cursor-pointer shadow-2xs"
+                >
+                  <Printer className="w-4 h-4 text-stone-500" />
+                  <span>Cetak Lembar Tugas</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDispatchLocked(!isDispatchLocked);
+                    setFeedbackToast(
+                      !isDispatchLocked
+                        ? '✅ Draft Lembar Jalan Berhasil Disahkan & Rilis ke Kurir!'
+                        : '🔓 Kunci Draft Dibuka untuk Pengeditan.'
+                    );
+                    setTimeout(() => setFeedbackToast(null), 3000);
+                  }}
+                  className={`px-4 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer ${
+                    isDispatchLocked
+                      ? 'bg-amber-100 text-amber-900 hover:bg-amber-200'
+                      : 'bg-slate-900 text-white hover:bg-slate-800'
+                  }`}
+                >
+                  {isDispatchLocked ? 'Buka Kunci Draft' : 'Sahkan & Rilis ke Kurir'}
                 </button>
               </div>
             </div>
