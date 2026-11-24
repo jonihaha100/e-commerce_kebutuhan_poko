@@ -19,22 +19,51 @@ import {
   Share2,
   Eye,
   X,
-  Copy,
-  CheckCheck,
-  Sparkles,
   ShieldCheck,
   BadgePercent,
   ReceiptText,
-  ExternalLink
+  AlertCircle,
+  PlusCircle,
+  Sparkles,
+  ArrowRight,
+  RefreshCw,
+  Bell,
+  Camera,
+  CheckCheck,
+  Flame,
+  ChevronRight
 } from 'lucide-react';
 
 export default function AkunCRMPage() {
   const { currentUser, addToCart, selectedCluster, setSelectedCluster, clusters } = useApp();
 
-  // Progressive Profiling Form State
+  // 1. Kitchen OS Core State
+  const [walletBalance, setWalletBalance] = useState(25000); // Saldo Dompet Dapur Siaga
+  const [totalSavingsIdr, setTotalSavingsIdr] = useState(184500); // Akumulasi Hemat vs Bapanas
+  const savingsPercent = 18;
+
+  // 2. Silent Subuh Delivery Configuration
+  const [dropLocation, setDropLocation] = useState<'PAGAR' | 'TERAS' | 'KOTAK' | 'SATPAM'>('PAGAR');
+  const [houseAddress, setHouseAddress] = useState('Jl. Antapani Raya Blok D No. 12');
+  const [gateNotes, setGateNotes] = useState('Pagar hitam tidak dikunci, cantolkan di handle pintu samping bel tanpa ketuk pintu.');
+  const [savedDropSuccess, setSavedDropSuccess] = useState(false);
+  const [testWaSent, setTestWaSent] = useState(false);
+
+  // 3. Modals State
+  const [showSavingsModal, setShowSavingsModal] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [copiedWaMessage, setCopiedWaMessage] = useState(false);
+
+  // 4. Claim State
+  const [claimProduct, setClaimProduct] = useState('Telur Retak');
+  const [claimAmount, setClaimAmount] = useState(3500);
+  const [claimSuccess, setClaimSuccess] = useState(false);
+
+  // 5. Kitchen Profile Parameters
   const [familyMembers, setFamilyMembers] = useState(4);
   const [portion, setPortion] = useState<'250gr' | '500gr' | '1kg'>('500gr');
-  const [notifyTime, setNotifyTime] = useState('08:30');
+  const [cookingTime, setCookingTime] = useState('06:00');
   const [dietary, setDietary] = useState<string[]>([
     'Sayur Bebas Pestisida (Organik)',
     'Ayam Potong Halal Segar',
@@ -42,23 +71,73 @@ export default function AkunCRMPage() {
   ]);
   const [savedKitchenSuccess, setSavedKitchenSuccess] = useState(false);
 
-  // Subuh Courier Drop Point State (Contactless Delivery)
-  const [dropLocation, setDropLocation] = useState<'PAGAR' | 'TERAS' | 'KOTAK' | 'SATPAM'>('PAGAR');
-  const [houseAddress, setHouseAddress] = useState('Jl. Antapani Raya Blok D No. 12');
-  const [gateNotes, setGateNotes] = useState('Pagar hitam tidak dikunci, cantolkan di handle pintu samping bel.');
-  const [savedDropSuccess, setSavedDropSuccess] = useState(false);
-  const [testWaSent, setTestWaSent] = useState(false);
+  // 6. Kitchen Pantry Stock Radar (Milkbasket Style Inventory)
+  const kitchenInventory = [
+    {
+      id: 'beras',
+      name: 'Beras Pandan Wangi 5kg',
+      category: 'Karbohidrat Pokok',
+      status: 'SAFE',
+      daysLeft: 6,
+      currentStock: '3.5 kg tersisa',
+      icon: '🍚',
+      color: 'bg-emerald-500',
+    },
+    {
+      id: 'minyak',
+      name: 'Minyak Goreng Sawit 2L',
+      category: 'Minyak Goreng',
+      status: 'SAFE',
+      daysLeft: 5,
+      currentStock: '1.2 Liter tersisa',
+      icon: '🛢️',
+      color: 'bg-emerald-500',
+    },
+    {
+      id: 'telur',
+      name: 'Telur Ayam Negeri Fresh 1kg',
+      category: 'Protein Harian',
+      status: 'WARNING',
+      daysLeft: 2,
+      currentStock: '4 butir tersisa',
+      icon: '🥚',
+      color: 'bg-amber-500',
+    },
+    {
+      id: 'sayur',
+      name: 'Pakcoy & Sayur Hijau Segar',
+      category: 'Sayuran Harian',
+      status: 'CRITICAL',
+      daysLeft: 1,
+      currentStock: 'Habis besok pagi',
+      icon: '🥬',
+      color: 'bg-rose-500',
+    },
+  ];
 
-  // CRM Wallet Balance & Real Savings Metrics
-  const walletBalance = 25000; // Available cashback from wallet_ledger
-  const totalSavingsIdr = 184500; // Akumulasi hemat vs harga pasar Bapanas
-  const savingsPercent = 18; // Persentase rata-rata hemat belanja
+  // 7. Tomorrow Morning Delivery Basket (04:30 - 07:30 WIB)
+  const tomorrowSubuhBasket = [
+    {
+      product: initialProducts[1], // Pakcoy Hidroponik
+      price: initialCatalogPrices[1],
+      qty: 2,
+      notes: 'Segar panen sore Ciwidey',
+    },
+    {
+      product: initialProducts[4], // Telur Ayam Negeri
+      price: initialCatalogPrices[4] || { sell_price_idr: 27500 },
+      qty: 1,
+      notes: 'Kemasan tray anti retak',
+    },
+    {
+      product: initialProducts[0], // Ubi Cilembu Madu
+      price: initialCatalogPrices[0],
+      qty: 1,
+      notes: 'Siap kukus sarapan pagi',
+    },
+  ];
 
-  // Modal State & WA Share
-  const [showSavingsModal, setShowSavingsModal] = useState(false);
-  const [copiedWaMessage, setCopiedWaMessage] = useState(false);
-
-  // Detail Data Rincian Penghematan Berdasarkan Bapanas Bandung
+  // 8. Breakdown Data Penghematan vs Bapanas
   const savingsBreakdown = [
     {
       id: 'telur',
@@ -107,7 +186,7 @@ export default function AkunCRMPage() {
   ];
 
   const handleShareWa = () => {
-    const waText = `Alhamdulillah bulan ini belanja dapur subuh lewat Berkah Tani di Komplek ${selectedCluster.name} hemat Rp ${totalSavingsIdr.toLocaleString('id-ID')} dibanding harga pasar biasa!\n\nSayurnya segar baru dipetik, telur bersih, diantar subuh jam 5 pagi langsung digantung di pagar sebelum kita masak sarapan (04:30 - 07:30 WIB).\n\nTetangga yang mau belanja bareng biar ongkir kurirnya gratis bisa cek jadwal klaster kita di sini:\nhttps://berkahtani.id/c/${selectedCluster.qr_slug}`;
+    const waText = `Alhamdulillah bulan ini belanja dapur subuh lewat Berkah Tani di Komplek ${selectedCluster.name} hemat Rp ${totalSavingsIdr.toLocaleString('id-ID')} dibanding harga pasar biasa!\n\nSayurnya segar baru dipetik sore, diantar kurir subuh jam 5 pagi langsung digantung di pagar tanpa ketuk pintu sebelum kita masak sarapan (04:30 - 07:30 WIB).\n\nTetangga yang mau belanja bareng biar ongkir kurirnya gratis bisa cek jadwal klaster kita di sini:\nhttps://berkahtani.id/c/${selectedCluster.qr_slug}`;
 
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(waText);
@@ -119,54 +198,28 @@ export default function AkunCRMPage() {
     window.open(waUrl, '_blank');
   };
 
-  // Smart Pantry Predictions (Bahan diprediksi habis dalam 1-2 hari)
-  const predictedLowItems = [
-    {
-      product: initialProducts[1], // Pakcoy Hidroponik
-      price: initialCatalogPrices[1],
-      lastBoughtDaysAgo: 5,
-      frequencyDays: 4,
-      status: 'CRITICAL_LOW' as const,
-      priceSignal: 'Hemat Rp 1.500 vs Bapanas',
-      signalType: 'PRICE_DROP' as const,
-    },
-    {
-      product: initialProducts[0], // Ubi Cilembu Madu
-      price: initialCatalogPrices[0],
-      lastBoughtDaysAgo: 7,
-      frequencyDays: 7,
-      status: 'NEEDS_REFILL' as const,
-      priceSignal: 'Mitra Ciwidey Langsung 1P',
-      signalType: 'DIRECT_FARMER' as const,
-    },
-    {
-      product: initialProducts[2], // Sosin Manis Segar
-      price: initialCatalogPrices[2],
-      lastBoughtDaysAgo: 4,
-      frequencyDays: 3,
-      status: 'NEEDS_REFILL' as const,
-      priceSignal: 'Harga Stabil Acuan Bapanas',
-      signalType: 'STABLE' as const,
-    },
-  ];
-
-  const [pantryAddedAll, setPantryAddedAll] = useState(false);
-  const [itemAddedMap, setItemAddedMap] = useState<Record<string, boolean>>({});
-
-  const handleAddAllPantry = () => {
-    predictedLowItems.forEach((item) => {
-      addToCart(item.product, item.price, 1);
-    });
-    setPantryAddedAll(true);
-    setTimeout(() => setPantryAddedAll(false), 2500);
+  const handleTopUp = (amount: number) => {
+    setWalletBalance((prev) => prev + amount);
+    setShowTopUpModal(false);
   };
 
-  const handleAddSingleItem = (productId: string, product: any, price: any) => {
-    addToCart(product, price, 1);
-    setItemAddedMap((prev) => ({ ...prev, [productId]: true }));
+  const handleExecuteClaim = (e: React.FormEvent) => {
+    e.preventDefault();
+    setWalletBalance((prev) => prev + claimAmount);
+    setClaimSuccess(true);
     setTimeout(() => {
-      setItemAddedMap((prev) => ({ ...prev, [productId]: false }));
+      setClaimSuccess(false);
+      setShowClaimModal(false);
     }, 2000);
+  };
+
+  const [pantryBatchAdded, setPantryBatchAdded] = useState(false);
+  const handleBatchRestock = () => {
+    tomorrowSubuhBasket.forEach((item) => {
+      addToCart(item.product, item.price, item.qty);
+    });
+    setPantryBatchAdded(true);
+    setTimeout(() => setPantryBatchAdded(false), 2500);
   };
 
   const handleSaveKitchenProfile = (e: React.FormEvent) => {
@@ -194,27 +247,30 @@ export default function AkunCRMPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12 space-y-8">
-      {/* 1. Profile Header */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
+      {/* 1. Header: Kitchen OS & Cluster Identity */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-[#1B8A44] bg-[#EBF7EE] border border-[#BAE6C5] px-3 py-1 rounded-full uppercase tracking-wider">
-              PROFIL DAPUR & SMART PANTRY
+            <span className="text-xs font-black text-[#1B8A44] bg-[#EBF7EE] border border-[#BAE6C5] px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5" />
+              Pusat Kendali Dapur Subuh (Kitchen OS)
             </span>
-            <span className="text-xs font-semibold text-stone-600 bg-stone-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-stone-500" />
+            <span className="text-xs font-bold text-amber-900 bg-amber-100/80 border border-amber-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-amber-700" />
               Shift Subuh: 04:30 – 07:30 WIB
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 mt-2 tracking-tight">
-            {currentUser.full_name}
+
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Dapur Keluarga: {currentUser.full_name}
           </h1>
-          <p className="text-xs text-stone-500 mt-1 flex flex-wrap items-center gap-2">
-            <span>{currentUser.email}</span>
+
+          <p className="text-xs text-stone-500 flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-slate-700">{currentUser.email}</span>
             <span>•</span>
-            <span className="text-emerald-700 font-semibold flex items-center gap-1">
+            <span className="text-emerald-700 font-bold flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-              {selectedCluster.name}
+              {selectedCluster.name} (Klaster Rute Motor #02)
             </span>
             <span>•</span>
             <span className="text-stone-500">
@@ -223,16 +279,18 @@ export default function AkunCRMPage() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
-          <div className="text-right">
-            <span className="text-[10px] text-stone-400 block font-mono">PILIH KLASTER RUTE:</span>
+        <div className="flex flex-col sm:flex-row items-start md:items-end gap-3 self-stretch md:self-auto">
+          <div className="bg-stone-50 p-2.5 rounded-2xl border border-stone-200 w-full sm:w-auto">
+            <span className="text-[10px] text-stone-500 block font-mono font-bold uppercase tracking-wider">
+              PILIH KLASTER RUTE:
+            </span>
             <select
               value={selectedCluster.id}
               onChange={(e) => {
                 const found = clusters.find((c) => c.id === e.target.value);
                 if (found) setSelectedCluster(found);
               }}
-              className="text-xs font-bold bg-stone-50 text-stone-800 border border-stone-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="mt-1 w-full text-xs font-black bg-white text-stone-900 border border-stone-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
             >
               {clusters.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -241,50 +299,155 @@ export default function AkunCRMPage() {
               ))}
             </select>
           </div>
-          <span className="px-3 py-1.5 bg-stone-100 text-stone-700 rounded-xl text-xs font-mono font-bold self-start sm:self-center border border-stone-200">
+          <span className="px-3 py-2 bg-stone-100 text-stone-800 rounded-2xl text-xs font-mono font-bold border border-stone-200 shrink-0">
             Role: {currentUser.role}
           </span>
         </div>
       </div>
 
-      {/* 2. Top Metric Cards: Saldo Dompet CRM & Total Penghematan Dapur */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card 1: Saldo Dompet CRM */}
-        <div className="bg-gradient-to-br from-[#0B4626] to-[#042413] text-white rounded-3xl p-6 shadow-md relative overflow-hidden border border-emerald-900/50 flex flex-col justify-between">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-emerald-200 flex items-center gap-1.5">
-                <Wallet className="w-4 h-4 text-emerald-300" />
-                Saldo Dompet CRM (Cashback & Klaim)
+      {/* 2. SECTION UTAMA A: Live Status Pengantaran Subuh Besok (Silent Delivery Engine) */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-700 relative overflow-hidden">
+        <div className="relative z-10 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-700/80">
+            <div className="space-y-1">
+              <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                JADWAL PENGANTARAN TERDEKAT
               </span>
-              <span className="text-[10px] bg-emerald-600/90 text-white px-2.5 py-0.5 rounded-full font-bold">
-                Tersedia
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                <Truck className="w-6 h-6 text-emerald-400" />
+                Besok Pagi: 04:40 – 05:05 WIB (Stop 1 Klaster)
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full text-xs font-bold">
+                ✓ SLA Silent Delivery Aktif
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Box 1: Titik Drop Tanpa Ketuk Pintu */}
+            <div className="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/10 space-y-2">
+              <span className="text-[10px] text-emerald-200/80 font-mono font-bold block">
+                TITIK DROP (SILENT DROP)
+              </span>
+              <div className="text-sm font-bold text-white flex items-center gap-2">
+                <span>🏷️ Gantung di Pagar Luar</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-snug">
+                "{gateNotes}"
+              </p>
+              <span className="text-[10px] text-amber-300 block font-semibold pt-1">
+                ⚡ Kurir tidak akan mengetuk pintu / membunyikan bel.
               </span>
             </div>
 
-            <div className="text-3xl sm:text-4xl font-extrabold mt-3 tracking-tight text-white">
+            {/* Box 2: Kurir & Rute Bertanggung Jawab */}
+            <div className="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/10 space-y-2">
+              <span className="text-[10px] text-emerald-200/80 font-mono font-bold block">
+                KURIR MOTOR & RUTE
+              </span>
+              <div className="text-sm font-bold text-white">
+                Kang Ujang • Motor Rute #02
+              </div>
+              <p className="text-xs text-slate-300">
+                Menyusuri 10 rumah di {selectedCluster.name} dalam waktu 28 menit sebelum bergerak ke komplek berikutnya.
+              </p>
+              <span className="text-[10px] text-emerald-300 block font-mono font-semibold pt-1">
+                Kapasitas: 10/10 Rumah Terjadwal
+              </span>
+            </div>
+
+            {/* Box 3: Paket Subuh Terjadwal */}
+            <div className="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/10 space-y-2 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] text-emerald-200/80 font-mono font-bold block">
+                  PAKET SUBUH TERJADWAL
+                </span>
+                <div className="text-sm font-bold text-white">
+                  3 Komoditas Dapur Siap Kirim
+                </div>
+                <p className="text-xs text-slate-300">
+                  Pakcoy Hidroponik (2 ikat), Telur Negeri (1 kg), Ubi Cilembu Madu (1 kg).
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleBatchRestock}
+                  className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  <span>{pantryBatchAdded ? '3 Bahan Dimasukkan Keranjang!' : 'Ulangi Pesanan Subuh'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SECTION UTAMA B: Buku Kas Dapur Terpadu (Unified Kitchen Ledger & Savings) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Card 1: Saldo Dompet Dapur Siaga (Prepaid Balance + Instant SLA Claim) */}
+        <div className="bg-gradient-to-br from-[#0B4626] to-[#042413] text-white rounded-3xl p-6 sm:p-7 shadow-md relative overflow-hidden border border-emerald-900/60 flex flex-col justify-between space-y-4">
+          <div className="relative z-10 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-200 flex items-center gap-1.5">
+                <Wallet className="w-4 h-4 text-emerald-300" />
+                Saldo Dompet Dapur Siaga
+              </span>
+              <span className="text-[10px] bg-emerald-600/90 text-white px-2.5 py-0.5 rounded-full font-black">
+                TERPOTONG OTOMATIS
+              </span>
+            </div>
+
+            <div className="text-3xl sm:text-4xl font-black tracking-tight text-white">
               {formatRupiah(walletBalance)}
             </div>
 
-            <p className="text-xs text-emerald-200/90 mt-2">
-              Dapat langsung dipotongkan otomatis pada checkout group-buy berikutnya.
+            <p className="text-xs text-emerald-200/90 leading-relaxed">
+              Saldo otomatis memotong belanjaan subuh tanpa perlu bayar QRIS berkali-kali. Mengurangi biaya transfer dan waktu checkout.
             </p>
+
+            {/* Quick Actions Dompet */}
+            <div className="pt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowTopUpModal(true)}
+                className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>+ Isi Saldo Dapur</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowClaimModal(true)}
+                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer backdrop-blur-xs"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Klaim Barang Rusak (5 Detik)</span>
+              </button>
+            </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-emerald-700/60 flex items-center justify-between text-xs text-emerald-200">
-            <span className="font-mono text-[11px]">Status Ledger: ACTIVE</span>
-            <span className="font-semibold text-white flex items-center gap-1">
+          <div className="pt-4 border-t border-emerald-700/60 flex items-center justify-between text-xs text-emerald-200">
+            <span className="font-mono text-[11px]">Ledger: Negative Working Capital</span>
+            <span className="font-bold text-white flex items-center gap-1">
               <Check className="w-3.5 h-3.5 text-emerald-300" />
-              Otomatis Terverifikasi
+              Garansi Uang Aman
             </span>
           </div>
         </div>
 
-        {/* Card 2: Total Penghematan Dapur (Menggantikan Kartu Petani Lama) */}
-        <div className="bg-gradient-to-br from-[#853B0B] via-[#632704] to-[#3B1402] text-white rounded-3xl p-6 shadow-md relative overflow-hidden border border-amber-800/60 flex flex-col justify-between">
-          <div className="relative z-10">
+        {/* Card 2: Total Penghematan Belanja Dapur vs Bapanas (The Retention Engine) */}
+        <div className="bg-gradient-to-br from-[#853B0B] via-[#632704] to-[#3B1402] text-white rounded-3xl p-6 sm:p-7 shadow-md relative overflow-hidden border border-amber-800/60 flex flex-col justify-between space-y-4">
+          <div className="relative z-10 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-amber-200 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-amber-200 flex items-center gap-1.5">
                 <TrendingDown className="w-4 h-4 text-amber-300" />
                 Total Penghematan Belanja Dapur
               </span>
@@ -293,8 +456,8 @@ export default function AkunCRMPage() {
               </span>
             </div>
 
-            <div className="flex items-baseline gap-2 mt-3">
-              <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">
                 {formatRupiah(totalSavingsIdr)}
               </span>
               <span className="text-xs font-semibold text-amber-200/90">
@@ -302,16 +465,16 @@ export default function AkunCRMPage() {
               </span>
             </div>
 
-            <p className="text-xs text-amber-200/90 mt-2 leading-relaxed">
-              Akumulasi selisih belanja keluarga Anda dibanding harga rata-rata Pasar Tradisional & Supermarket.
+            <p className="text-xs text-amber-200/90 leading-relaxed">
+              Akumulasi selisih belanja keluarga Anda dibanding harga pasar tradisional Kota Bandung berdasarkan pantauan harian data Bapanas.
             </p>
 
             {/* Quick Action Buttons inside Card */}
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="pt-2 flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowSavingsModal(true)}
-                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Eye className="w-3.5 h-3.5" />
                 <span>Lihat Rincian Hemat</span>
@@ -320,7 +483,7 @@ export default function AkunCRMPage() {
               <button
                 type="button"
                 onClick={handleShareWa}
-                className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer backdrop-blur-xs"
+                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer backdrop-blur-xs"
               >
                 <Share2 className="w-3.5 h-3.5 text-amber-300" />
                 <span>{copiedWaMessage ? 'Link WA Tersalin!' : 'Share ke Grup WA'}</span>
@@ -328,12 +491,12 @@ export default function AkunCRMPage() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-amber-700/50 flex items-center justify-between text-xs text-amber-200">
+          <div className="pt-4 border-t border-amber-700/50 flex items-center justify-between text-xs text-amber-200">
             <span className="flex items-center gap-1">
               <BadgePercent className="w-3.5 h-3.5 text-amber-300" />
               Acuan: Radar Bapanas Bandung
             </span>
-            <span className="font-semibold text-white flex items-center gap-1">
+            <span className="font-bold text-white flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
               Transparansi Riil
             </span>
@@ -341,121 +504,108 @@ export default function AkunCRMPage() {
         </div>
       </div>
 
-      {/* 3. Smart Pantry Tracker */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-5">
+      {/* 4. SECTION UTAMA C: Radar Ketahanan Stok Dapur (Kitchen Inventory Restock) */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200">
           <div>
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-lg font-bold text-slate-900">Smart Pantry Tracker</h2>
+              <h2 className="text-lg font-bold text-slate-900">
+                Radar Ketahanan Stok Dapur (Kitchen Safety Stock)
+              </h2>
               <span className="text-xs bg-[#EBF7EE] text-[#1B8A44] border border-[#BAE6C5] font-bold px-2.5 py-0.5 rounded-full">
-                Prediksi AI
+                Prediksi Cerdas
               </span>
             </div>
             <p className="text-xs text-stone-500 mt-1">
-              Berdasarkan pola konsumsi dapur keluarga Anda, stok bahan pangan berikut diprediksi habis dalam 24–48 jam.
+              Pantau sisa persediaan bahan pokok dapur keluarga Anda agar tidak kehabisan mendadak saat jam masak pagi.
             </p>
           </div>
 
           <button
-            onClick={handleAddAllPantry}
+            type="button"
+            onClick={handleBatchRestock}
             className="px-4 py-2.5 bg-[#1B8A44] hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
-            {pantryAddedAll ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-                <span>Semua Bahan Dimasukkan!</span>
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-4 h-4" />
-                <span>Masukkan Semua ke Keranjang 1-Klik</span>
-              </>
-            )}
+            <ShoppingCart className="w-4 h-4" />
+            <span>1-Klik Restock Kebutuhan Dapur</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {predictedLowItems.map((item) => {
-            const isAdded = itemAddedMap[item.product.id];
-            return (
-              <div
-                key={item.product.id}
-                className="p-4 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-emerald-50/30 transition space-y-2.5 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-900 leading-snug">
-                      {item.product.name}
-                    </span>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${item.status === 'CRITICAL_LOW'
-                        ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                        : 'bg-amber-100 text-amber-800 border border-amber-200'
-                        }`}
-                    >
-                      {item.status === 'CRITICAL_LOW' ? 'Hampir Habis' : 'Perlu Diisi'}
-                    </span>
-                  </div>
+        {/* 4 Baris Indikator Keterisian Bahan Pokok */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {kitchenInventory.map((item) => (
+            <div
+              key={item.id}
+              className="p-4 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-white transition space-y-3"
+            >
+              <div className="flex items-start justify-between">
+                <span className="text-2xl">{item.icon}</span>
+                <span
+                  className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                    item.status === 'SAFE'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : item.status === 'WARNING'
+                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                      : 'bg-rose-100 text-rose-800 border border-rose-200 animate-pulse'
+                  }`}
+                >
+                  {item.status === 'SAFE'
+                    ? 'Stok Aman'
+                    : item.status === 'WARNING'
+                    ? 'Perlu Refill'
+                    : 'Kritis'}
+                </span>
+              </div>
 
-                  <div className="text-[11px] text-stone-500 mt-1">
-                    Terakhir beli: <b>{item.lastBoughtDaysAgo} hari lalu</b> (siklus rutin: tiap {item.frequencyDays} hari)
-                  </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-900 line-clamp-1">{item.name}</h3>
+                <span className="text-[10px] text-stone-400 block">{item.category}</span>
+              </div>
 
-                  {/* Price Radar Signal Badge */}
-                  <div className="mt-2">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200">
-                      <TrendingDown className="w-3 h-3 text-emerald-600" />
-                      {item.priceSignal}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-stone-200 text-xs">
-                  <div>
-                    <span className="text-[10px] text-stone-400 block">Harga Klaster</span>
-                    <span className="font-bold text-emerald-700 text-sm">
-                      {formatRupiah(item.price.sell_price_idr)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleAddSingleItem(item.product.id, item.product, item.price)}
-                    className={`px-3 py-1.5 border rounded-lg font-semibold text-[11px] transition cursor-pointer flex items-center gap-1 ${isAdded
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white hover:bg-stone-100 border-stone-300 text-stone-800 shadow-2xs'
-                      }`}
+              {/* Progress bar sisa hari */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px] font-bold">
+                  <span className="text-stone-600">{item.currentStock}</span>
+                  <span
+                    className={
+                      item.status === 'CRITICAL'
+                        ? 'text-rose-600'
+                        : item.status === 'WARNING'
+                        ? 'text-amber-600'
+                        : 'text-emerald-700'
+                    }
                   >
-                    {isAdded ? (
-                      <>
-                        <Check className="w-3 h-3" />
-                        <span>Ditambahkan</span>
-                      </>
-                    ) : (
-                      <span>+ Keranjang</span>
-                    )}
-                  </button>
+                    {item.daysLeft} Hari Lagi
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${item.color} rounded-full transition-all`}
+                    style={{ width: `${Math.min(100, (item.daysLeft / 7) * 100)}%` }}
+                  />
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* 4. Subuh Courier Drop Point & Contactless Instructions */}
+      {/* 5. SECTION UTAMA D: Pengaturan Titik Drop Silent Subuh & Alamat */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200">
           <div>
             <div className="flex items-center gap-2">
               <Truck className="w-5 h-5 text-emerald-600" />
               <h2 className="text-lg font-bold text-slate-900">
-                Instruksi Pengantaran Kurir Subuh (Contactless)
+                SOP Pengantaran Silent Subuh (Tanpa Ketuk Pintu / Bel)
               </h2>
               <span className="text-[11px] bg-sky-100 text-sky-800 font-bold px-2.5 py-0.5 rounded-full border border-sky-200">
                 04:30 – 07:30 WIB
               </span>
             </div>
             <p className="text-xs text-stone-500 mt-1">
-              Pengantaran subuh tanpa mengetuk pagar atau mengganggu istirahat pagi keluarga Anda. Kurir akan meletakkan paket di titik yang Anda pilih.
+              Kurir subuh mengantarkan pesanan dapur Anda dengan senyap agar istirahat pagi keluarga Anda tidak terganggu.
             </p>
           </div>
         </div>
@@ -477,10 +627,11 @@ export default function AkunCRMPage() {
                   key={opt.id}
                   type="button"
                   onClick={() => setDropLocation(opt.id as any)}
-                  className={`p-3 text-left rounded-2xl border transition cursor-pointer flex flex-col justify-between ${dropLocation === opt.id
-                    ? 'bg-emerald-50 border-emerald-600 shadow-xs ring-1 ring-emerald-600'
-                    : 'bg-stone-50 border-stone-200 hover:bg-stone-100 text-stone-700'
-                    }`}
+                  className={`p-3 text-left rounded-2xl border transition cursor-pointer flex flex-col justify-between ${
+                    dropLocation === opt.id
+                      ? 'bg-emerald-50 border-emerald-600 shadow-xs ring-1 ring-emerald-600'
+                      : 'bg-stone-50 border-stone-200 hover:bg-stone-100 text-stone-700'
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-lg">{opt.icon}</span>
@@ -577,14 +728,14 @@ export default function AkunCRMPage() {
         </form>
       </div>
 
-      {/* 5. Progressive Profiling Form (Profil Dapur Keluarga) */}
+      {/* 6. SECTION UTAMA E: Profil Dapur Keluarga (Porsi & Jam Masak) */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs">
         <div className="flex items-center gap-2 mb-2">
           <Utensils className="w-5 h-5 text-emerald-600" />
-          <h2 className="text-lg font-bold text-slate-900">Profil Dapur Keluarga</h2>
+          <h2 className="text-lg font-bold text-slate-900">Profil Operasional Dapur Keluarga</h2>
         </div>
         <p className="text-xs text-stone-500 mb-6">
-          Bantu kami menyesuaikan porsi kemasan dan jam pengingat agar dapur Anda tidak pernah kehabisan bahan segar.
+          Sesuaikan porsi belanjaan dan jam mulai masak agar bahan dapur selalu tiba tepat waktu tanpa sisa berlebih.
         </p>
 
         <form onSubmit={handleSaveKitchenProfile} className="space-y-6">
@@ -600,10 +751,11 @@ export default function AkunCRMPage() {
                     type="button"
                     key={num}
                     onClick={() => setFamilyMembers(num)}
-                    className={`flex-1 py-2 text-xs font-bold rounded-xl border transition cursor-pointer ${familyMembers === num
-                      ? 'bg-[#1B8A44] text-white border-[#1B8A44] shadow-xs'
-                      : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-                      }`}
+                    className={`flex-1 py-2 text-xs font-bold rounded-xl border transition cursor-pointer ${
+                      familyMembers === num
+                        ? 'bg-[#1B8A44] text-white border-[#1B8A44] shadow-xs'
+                        : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                    }`}
                   >
                     {num} orang
                   </button>
@@ -614,7 +766,7 @@ export default function AkunCRMPage() {
             {/* Porsi Favorit */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
-                Porsi Favorit Sekali Masak
+                Porsi Masak Sekali Makan
               </label>
               <div className="flex items-center gap-2">
                 {(['250gr', '500gr', '1kg'] as const).map((p) => (
@@ -622,10 +774,11 @@ export default function AkunCRMPage() {
                     type="button"
                     key={p}
                     onClick={() => setPortion(p)}
-                    className={`flex-1 py-2 text-xs font-bold rounded-xl border transition cursor-pointer ${portion === p
-                      ? 'bg-[#1B8A44] text-white border-[#1B8A44] shadow-xs'
-                      : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-                      }`}
+                    className={`flex-1 py-2 text-xs font-bold rounded-xl border transition cursor-pointer ${
+                      portion === p
+                        ? 'bg-[#1B8A44] text-white border-[#1B8A44] shadow-xs'
+                        : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                    }`}
                   >
                     {p}
                   </button>
@@ -633,16 +786,16 @@ export default function AkunCRMPage() {
               </div>
             </div>
 
-            {/* Jam Notifikasi Favorit */}
+            {/* Jam Masak Pagi */}
             <div>
               <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
-                Jam Pengingat Dapur (WIB)
+                Jam Mulai Masak Sarapan (WIB)
               </label>
               <div className="relative">
                 <input
                   type="time"
-                  value={notifyTime}
-                  onChange={(e) => setNotifyTime(e.target.value)}
+                  value={cookingTime}
+                  onChange={(e) => setCookingTime(e.target.value)}
                   className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                 />
               </div>
@@ -652,7 +805,7 @@ export default function AkunCRMPage() {
           {/* Preferensi Kualitas Bahan */}
           <div>
             <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
-              Preferensi Kualitas Bahan Dapur
+              Standar Higienitas & Mutu Dapur
             </label>
             <div className="flex flex-wrap gap-2">
               {[
@@ -668,10 +821,11 @@ export default function AkunCRMPage() {
                     key={item}
                     type="button"
                     onClick={() => toggleDietary(item)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer flex items-center gap-1.5 ${active
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                      : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
-                      }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer flex items-center gap-1.5 ${
+                      active
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                    }`}
                   >
                     {active && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                     <span>{item}</span>
@@ -702,11 +856,10 @@ export default function AkunCRMPage() {
         </form>
       </div>
 
-      {/* 6. MODAL POPUP: Rincian Penghematan Belanja Dapur vs Bapanas */}
+      {/* MODAL 1: Rincian Penghematan Belanja Dapur vs Bapanas */}
       {showSavingsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-stone-200 shadow-2xl p-6 sm:p-8 space-y-6">
-            {/* Modal Header */}
             <div className="flex items-start justify-between pb-4 border-b border-stone-200">
               <div>
                 <span className="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
@@ -729,7 +882,6 @@ export default function AkunCRMPage() {
               </button>
             </div>
 
-            {/* Total Ringkasan Banner */}
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
                 <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider">
@@ -751,7 +903,6 @@ export default function AkunCRMPage() {
               </div>
             </div>
 
-            {/* Breakdown Items List */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-stone-700 uppercase tracking-wider">
                 Rincian Per Kategori Komoditas Pangan
@@ -791,7 +942,6 @@ export default function AkunCRMPage() {
               </div>
             </div>
 
-            {/* WA Sharing CTA Box inside Modal */}
             <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
@@ -799,7 +949,7 @@ export default function AkunCRMPage() {
                   Bagikan Bukti Belanja Hemat ke Tetangga Komplek
                 </span>
                 <p className="text-[11px] text-emerald-800">
-                  Ajak warga komplek {selectedCluster.name} ikut memesan agar kuota kurir subuh terpenuhi dan ongkir tetap gratis.
+                  Ajak warga komplek {selectedCluster.name} ikut memesan agar rute kurir motor subuh makin efisien dan ongkir tetap gratis.
                 </p>
               </div>
 
@@ -822,7 +972,6 @@ export default function AkunCRMPage() {
               </button>
             </div>
 
-            {/* Modal Footer */}
             <div className="flex items-center justify-between pt-2 border-t border-stone-200 text-xs">
               <span className="text-stone-400 text-[11px]">
                 Diperbarui otomatis tiap siklus panen & data Bapanas.
@@ -835,6 +984,163 @@ export default function AkunCRMPage() {
                 Tutup Rincian
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Top-Up Saldo Dompet Dapur Siaga (Prepaid Frictionless Engine) */}
+      {showTopUpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full border border-stone-200 shadow-2xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between pb-4 border-b border-stone-200">
+              <div>
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
+                  <Wallet className="w-3.5 h-3.5" />
+                  Isi Saldo Dapur Siaga
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mt-2">
+                  Top-Up Sekali, Belanja Subuh Otomatis
+                </h3>
+                <p className="text-xs text-stone-500 mt-1">
+                  Saldo terpotong otomatis saat pesanan subuh dikunci tengah malam. Bebas biaya QRIS berulang.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTopUpModal(false)}
+                className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider">
+                Pilih Nominal Top-Up
+              </label>
+
+              <div className="grid grid-cols-1 gap-2.5">
+                {[
+                  { amount: 50000, label: 'Rp 50.000', bonus: 'Cocok untuk 2x sarapan' },
+                  { amount: 100000, label: 'Rp 100.000', bonus: '+ Bonus Cashback Rp 5.000' },
+                  { amount: 250000, label: 'Rp 250.000', bonus: '+ Bonus Cashback Rp 15.000 (Paling Favorit)' },
+                ].map((item) => (
+                  <button
+                    key={item.amount}
+                    type="button"
+                    onClick={() => handleTopUp(item.amount)}
+                    className="p-3.5 rounded-2xl border border-stone-300 hover:border-emerald-600 hover:bg-emerald-50/50 text-left transition flex items-center justify-between cursor-pointer group"
+                  >
+                    <div>
+                      <span className="text-sm font-black text-slate-900 group-hover:text-emerald-800">
+                        {item.label}
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-semibold block">
+                        {item.bonus}
+                      </span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-emerald-600 transition" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-stone-200 flex items-center justify-between text-xs">
+              <span className="text-stone-400 text-[11px]">
+                Pembayaran via QRIS / Virtual Account instant.
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowTopUpModal(false)}
+                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl transition cursor-pointer"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Klaim Cepat Komplain Sayur/Telur Rusak (Instant 5-Second Refund) */}
+      {showClaimModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full border border-stone-200 shadow-2xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between pb-4 border-b border-stone-200">
+              <div>
+                <span className="text-xs font-bold text-rose-800 bg-rose-100 px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Garansi Mutu Subuh
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mt-2">
+                  Klaim Penggantian Instan (5 Detik)
+                </h3>
+                <p className="text-xs text-stone-500 mt-1">
+                  Ada telur retak atau sayur layu saat diantar subuh? Saldo otomatis masuk ke dompet Anda tanpa perlu retur fisik.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowClaimModal(false)}
+                className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleExecuteClaim} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                  Pilih Kendala Barang
+                </label>
+                <select
+                  value={claimProduct}
+                  onChange={(e) => {
+                    setClaimProduct(e.target.value);
+                    if (e.target.value.includes('Telur')) setClaimAmount(3500);
+                    else if (e.target.value.includes('Pakcoy')) setClaimAmount(5000);
+                    else setClaimAmount(4000);
+                  }}
+                  className="w-full px-3.5 py-2.5 text-xs font-bold rounded-xl border border-stone-300 text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                >
+                  <option value="Telur Retak (1-2 butir)">🥚 Telur Retak (1-2 butir) - Ganti Rp 3.500</option>
+                  <option value="Sayur Pakcoy Layu">🥬 Sayur Pakcoy Layu - Ganti Rp 5.000</option>
+                  <option value="Tomat Pecah">🍅 Tomat Pecah - Ganti Rp 4.000</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                  Foto Bukti Kondisi Barang (Opsional)
+                </label>
+                <div className="p-4 rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 text-center space-y-1">
+                  <Camera className="w-6 h-6 text-stone-400 mx-auto" />
+                  <span className="text-xs text-stone-600 block font-semibold">
+                    Klik atau taruh foto bukti paket
+                  </span>
+                  <span className="text-[10px] text-stone-400 block">
+                    Format: JPG / PNG (Maks 5 MB)
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900">
+                💰 Nilai ganti rugi <b>{formatRupiah(claimAmount)}</b> akan otomatis masuk ke Saldo Dompet Dapur Anda.
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {claimSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                    <span>Saldo {formatRupiah(claimAmount)} Berhasil Masuk!</span>
+                  </>
+                ) : (
+                  <span>Kreditkan Penggantian ke Dompet</span>
+                )}
+              </button>
+            </form>
           </div>
         </div>
       )}
